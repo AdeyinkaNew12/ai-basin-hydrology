@@ -1,40 +1,51 @@
 # Integrated Data Center Water Pathways
 
-This repository provides a reproducible workflow for linking U.S. data center locations to hydrologic systems (HUC8 basins, counties, aquifers, rivers, and reservoirs) to characterize potential water-supply pathways.
+This repository presents a reproducible analytical workflow for quantifying how U.S. data center infrastructure interacts with hydrologic systems. The framework links facility locations to watershed, groundwater, and surface-water features to characterize potential water-supply pathways across multiple spatial scales.
 
-## Method Overview
-The workflow:
-- Assigns data centers to HUC8 basins, counties, and aquifers
-- Computes nearest distances to major rivers and reservoirs
-- Integrates USGS county-level water-use data (2015)
-- Classifies groundwater vs surface-water supply pathways
-- Evaluates aquifer overrepresentation (Observed vs Expected)
-- Compares basins with and without data centers
+## Overview
 
-## Inputs
-All datasets should be placed in:
+The workflow integrates geospatial datasets to assess how data centers are positioned relative to:
 
-`/mnt/disk3/aoolaseinde/data/integrated_dc_water_pathways/`
+- HUC8 watersheds  
+- County-level water use  
+- Principal aquifers  
+- Major river networks  
+- Reservoir systems  
 
-## Run
+The primary objective is to evaluate whether data center siting reflects underlying water availability and supply structures.
 
+## Methodology
+
+The analysis pipeline performs the following steps:
+
+- Assigns data centers to HUC8 basins, counties, and aquifer extents  
+- Computes nearest-neighbor distances to major rivers and reservoirs  
+- Integrates 2015 USGS county-level water-use data  
+- Classifies dominant supply pathways (groundwater vs. surface water)  
+- Quantifies aquifer overrepresentation (observed vs. expected distribution)  
+- Compares hydrologic and water-use characteristics of basins with and without data centers  
+
+## Data Requirements
+
+Input datasets should be organized under:
+/mnt/disk3/aoolaseinde/data/integrated_dc_water_pathways/
+
+Expected inputs include:
+
+- Data center location dataset (CONUS)  
+- USGS county-level water use (2015)  
+- HUC8 watershed boundaries  
+- County boundaries  
+- Aquifer shapefile  
+- HydroRIVERS dataset  
+- HydroLAKES dataset (optional for reservoir analysis)  
+
+## Usage
+
+Run the workflow from the repository root:
+
+```bash
 python src/run_integrated_dc_water_pathways.py \
   --data-root /mnt/disk3/aoolaseinde/data/integrated_dc_water_pathways \
   --output-root /mnt/disk3/aoolaseinde/projects/integrated_dc_water_pathways/results \
   --verbose
-
-
-## Key Results
-- Data centers show strong proximity to surface water systems (rivers and reservoirs)
-- The majority align with surface-water-dominated supply pathways
-- Significant overrepresentation is observed in specific aquifers (non-random siting)
-- Basin-scale comparisons indicate statistically significant differences between HUC8 regions with and without data centers
-
-
-
-## Key Results
-- Data centers exhibit strong spatial proximity to major surface water systems, including rivers and reservoirs
-- Infrastructure is predominantly associated with surface-water-dominated supply pathways
-- Aquifer-level analysis reveals significant overrepresentation, indicating non-random siting patterns
-- Basin-scale comparisons (HUC8) show statistically significant differences in water use characteristics between regions with and without data centers
-
