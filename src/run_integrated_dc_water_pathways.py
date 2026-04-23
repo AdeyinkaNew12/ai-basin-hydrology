@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """
 Integrated Data Center Water Supply Pathways Analysis
@@ -8,8 +9,11 @@ those spatial relationships with county-level USGS water-use attributes to
 produce integrated tables, summary statistics, figures, and a plain-text
 summary report.
 
-Inputs are discovered from a user-supplied data root, with defaults aligned to
-common server layouts.
+Server/GitHub version:
+- discovers files from a data root
+- requires HydroRIVERS sidecars
+- uses major rivers defined as ORD_STRA >= 5
+- writes tables and figures to an output directory
 """
 
 from __future__ import annotations
@@ -27,7 +31,7 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.stats import binomtest, mannwhitneyu
+from scipy.stats import mannwhitneyu
 
 
 TARGET_CRS = "EPSG:5070"
@@ -50,9 +54,6 @@ class ResolvedPaths:
     reservoir: Optional[str]
 
 
-# ============================================================
-# HELPERS
-# ============================================================
 def ensure_dir(path: str) -> str:
     os.makedirs(path, exist_ok=True)
     return path
@@ -119,6 +120,21 @@ def find_file_smart(
     return None
 
 
+def verify_shapefile_sidecars(shp_path: str, required_exts=(".shp", ".dbf", ".shx", ".prj"), label: str = "shapefile") -> None:
+    base, _ = os.path.splitext(shp_path)
+    missing = []
+    for ext in required_exts:
+        candidate = base + ext
+        if not os.path.exists(candidate):
+            missing.append(candidate)
+
+    if missing:
+        raise FileNotFoundError(
+            f"Missing required sidecar files for {label}:\n" + "\n".join(missing)
+        )
+    print(f"[OK] {label} sidecars present for: {shp_path}")
+
+
 def pick_column(df: pd.DataFrame, candidates: Sequence[str], required: bool = True) -> Optional[str]:
     lower_map = {str(col).lower(): col for col in df.columns}
     for candidate in candidates:
@@ -176,6 +192,7 @@ def load_huc8_dataset(path: str) -> tuple[gpd.GeoDataFrame, str]:
     if path_lower.endswith(".gpkg"):
         return safe_read_vector(path, label="HUC8 watersheds", layer="WBDHU8"), "WBD"
     if path_lower.endswith(".shp") and "hybas" in path_lower and "lev08" in path_lower:
+        verify_shapefile_sidecars(path, label="HydroBASINS Level 8")
         return safe_read_vector(path, label="HydroBASINS Level 8"), "HYBAS"
     raise ValueError(f"Unsupported HUC8 dataset path: {path}")
 
@@ -314,32 +331,6 @@ def dominant_sector_row(row: pd.Series, sector_share_cols: Sequence[str]) -> Opt
     return vals.idxmax().replace("_share", "")
 
 
-def mw_test(series_a: pd.Series, series_b: pd.Series) -> tuple[float, float, int, int]:
-    a = pd.to_numeric(series_a, errors="coerce").dropna()
-    b = pd.to_numeric(series_b, errors="coerce").dropna()
-    if len(a) < 2 or len(b) < 2:
-        return np.nan, np.nan, len(a), len(b)
-    stat, pvalue = mannwhitneyu(a, b, alternative="two-sided")
-    return stat, pvalue, len(a), len(b)
-
-
-def fdr_bh(pvals: Sequence[float]) -> np.ndarray:
-    pvals = np.asarray(pvals, dtype=float)
-    n = len(pvals)
-    order = np.argsort(pvals)
-    ranked = pvals[order]
-    adjusted = np.empty(n, dtype=float)
-    prev = 1.0
-    for i in range(n - 1, -1, -1):
-        rank = i + 1
-        val = ranked[i] * n / rank
-        prev = min(prev, val)
-        adjusted[i] = prev
-    out = np.empty(n, dtype=float)
-    out[order] = np.minimum(adjusted, 1.0)
-    return out
-
-
 def save_fig(fig: plt.Figure, outpath: str, dpi: int = 300) -> None:
     fig.savefig(outpath, dpi=dpi, bbox_inches="tight")
     print(f"[SAVED FIGURE] {outpath}")
@@ -368,20 +359,11 @@ def classify_supply_pathway(row: pd.Series) -> str:
 
 
 def resolve_paths(data_root: str) -> ResolvedPaths:
-    hints = [
-        "groundwater",
-        "water-project",
-        "wbd_national_gpkg",
-        "hydrolakes",
-        "hydrorivers",
-    ]
+    hints = ["groundwater", "water-project", "wbd_national_gpkg", "hydrolakes", "hydrorivers"]
 
     dc_path = find_file_smart(
         data_root,
-        exact_candidates=[
-            os.path.join(data_root, "DC_CONUS.csv"),
-            os.path.join(data_root, "DC_CONUS .csv"),
-        ],
+        exact_candidates=[os.path.join(data_root, "DC_CONUS.csv"), os.path.join(data_root, "DC_CONUS .csv")],
         search_patterns=["DC_CONUS.csv", "DC_CONUS .csv", "*DC*CONUS*.csv"],
         label="DC CSV",
         preferred_substrings=hints,
@@ -389,10 +371,7 @@ def resolve_paths(data_root: str) -> ResolvedPaths:
 
     usgs_path = find_file_smart(
         data_root,
-        exact_candidates=[
-            os.path.join(data_root, "usco2015v2.0.csv"),
-            os.path.join(data_root, "WaterUse2015.csv"),
-        ],
+        exact_candidates=[os.path.join(data_root, "usco2015v2.0.csv"), os.path.join(data_root, "WaterUse2015.csv")],
         search_patterns=["usco2015v2.0.csv", "WaterUse2015.csv", "*usco2015*.csv", "*water*use*.csv"],
         label="USGS county water-use CSV",
         preferred_substrings=hints,
@@ -412,10 +391,7 @@ def resolve_paths(data_root: str) -> ResolvedPaths:
 
     county_path = find_file_smart(
         data_root,
-        exact_candidates=[
-            os.path.join(data_root, "tl_2019_us_county.shp"),
-            os.path.join(data_root, "tl_2023_us_county.shp"),
-        ],
+        exact_candidates=[os.path.join(data_root, "tl_2019_us_county.shp"), os.path.join(data_root, "tl_2023_us_county.shp")],
         search_patterns=["tl_*_us_county.shp", "cb_*_us_county_500k.shp", "*county*.shp"],
         label="County shapefile",
         preferred_substrings=hints,
@@ -460,13 +436,8 @@ def resolve_paths(data_root: str) -> ResolvedPaths:
     )
 
 
-# ============================================================
-# MAIN WORKFLOW
-# ============================================================
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Integrated data center water supply pathways workflow."
-    )
+    parser = argparse.ArgumentParser(description="Integrated data center water supply pathways workflow.")
     parser.add_argument("--data-root", default=DEFAULT_DATA_ROOT, help="Root directory containing required input datasets.")
     parser.add_argument("--output-root", default=DEFAULT_OUTPUT_ROOT, help="Directory where outputs will be written.")
     parser.add_argument("--target-crs", default=TARGET_CRS, help="Projected CRS used for distance and area calculations.")
@@ -478,6 +449,12 @@ def main() -> None:
 
     paths = resolve_paths(args.data_root)
 
+    verify_shapefile_sidecars(paths.river, label="HydroRIVERS")
+    verify_shapefile_sidecars(paths.county, label="County shapefile")
+    verify_shapefile_sidecars(paths.aquifer, label="Aquifer shapefile")
+    if paths.reservoir:
+        verify_shapefile_sidecars(paths.reservoir, label="HydroLAKES")
+
     print("\n================ PATH SUMMARY ================")
     print("DC_PATH        :", paths.dc)
     print("USGS_PATH      :", paths.usgs)
@@ -486,6 +463,9 @@ def main() -> None:
     print("AQUIFER_PATH   :", paths.aquifer)
     print("RIVER_PATH     :", paths.river)
     print("RESERVOIR_PATH :", paths.reservoir)
+    print("OUTDIR         :", outdir)
+    print("FIGDIR         :", figdir)
+    print("TABLEDIR       :", tabledir)
     print("=============================================\n")
 
     print("Loading datasets...")
@@ -542,14 +522,19 @@ def main() -> None:
     rivers = ensure_crs(clean_geometry(rivers_raw, "Rivers"))
     ord_col = pick_column(rivers, ["ORD_STRA", "ord_stra", "strahler", "streamorde", "stream_order"], required=False)
     river_name_col = choose_river_name_col(rivers)
-    if ord_col is not None:
-        rivers["ORD_STRA_TMP"] = pd.to_numeric(rivers[ord_col], errors="coerce")
-        major_rivers = rivers[rivers["ORD_STRA_TMP"] >= MAJOR_RIVER_ORD_STRA].copy()
-    else:
-        rivers["ORD_STRA_TMP"] = np.nan
-        major_rivers = rivers.copy()
-    major_rivers["RIVER_NAME"] = major_rivers[river_name_col].astype(str) if river_name_col is not None else "Unnamed river"
+
+    if ord_col is None:
+        raise ValueError(
+            "ORD_STRA column not found in HydroRIVERS attributes. "
+            "Check that the .dbf sidecar is present and matches the .shp."
+        )
+
+    rivers["ORD_STRA_TMP"] = pd.to_numeric(rivers[ord_col], errors="coerce")
+    major_rivers = rivers[rivers["ORD_STRA_TMP"] >= MAJOR_RIVER_ORD_STRA].copy()
+    major_rivers["RIVER_NAME"] = rivers[river_name_col].astype(str) if river_name_col is not None else "Unnamed river"
     major_rivers = major_rivers[["RIVER_NAME", "ORD_STRA_TMP", "geometry"]].copy()
+    print(f"[INFO] Using Strahler order >= {MAJOR_RIVER_ORD_STRA} for major rivers")
+    print(f"Major rivers retained: {len(major_rivers)}")
 
     reservoirs = None
     if reservoirs_raw is not None:
@@ -671,6 +656,7 @@ def main() -> None:
     ]:
         if col in counties_usgs.columns:
             county_supply_cols.append(col)
+
     county_supply = counties_usgs[county_supply_cols].drop_duplicates().copy()
     dc_unique = dc_unique.merge(county_supply, on="FIPS", how="left")
 
@@ -690,363 +676,113 @@ def main() -> None:
             dc_unique[f"county_{sector}_sw_fraction"] = safe_frac(dc_unique[f"{sector}_WSWFr"], dc_unique[f"{sector}_WFrTo"])
 
     if "PS_GWPop" in dc_unique.columns and "PS_TOPop" in dc_unique.columns:
-        dc_unique["county_public_supply_population_gw_fraction"] = safe_frac(dc_unique["PS_GWPop"], dc_unique["PS_TOPop"])
+        dc_unique["county_PS_pop_gw_fraction"] = safe_frac(dc_unique["PS_GWPop"], dc_unique["PS_TOPop"])
     if "PS_SWPop" in dc_unique.columns and "PS_TOPop" in dc_unique.columns:
-        dc_unique["county_public_supply_population_sw_fraction"] = safe_frac(dc_unique["PS_SWPop"], dc_unique["PS_TOPop"])
+        dc_unique["county_PS_pop_sw_fraction"] = safe_frac(dc_unique["PS_SWPop"], dc_unique["PS_TOPop"])
 
-    dc_unique["combined_supply_pathway_proxy"] = dc_unique.apply(classify_supply_pathway, axis=1)
+    if "county_PS_gw_fraction" not in dc_unique.columns and "county_PS_pop_gw_fraction" in dc_unique.columns:
+        dc_unique["county_PS_gw_fraction"] = dc_unique["county_PS_pop_gw_fraction"]
+    if "county_PS_sw_fraction" not in dc_unique.columns and "county_PS_pop_sw_fraction" in dc_unique.columns:
+        dc_unique["county_PS_sw_fraction"] = dc_unique["county_PS_pop_sw_fraction"]
 
-    print("Running county-to-HUC8 area-weighted overlay...")
-    counties_p["county_area_m2"] = counties_p.geometry.area
-    overlay_county_huc8 = gpd.overlay(counties_p, huc8_p[["HUC8", "HUC8_NAME", "geometry"]], how="intersection")
-    overlay_county_huc8["intersect_area_m2"] = overlay_county_huc8.geometry.area
-    overlay_county_huc8["area_weight"] = overlay_county_huc8["intersect_area_m2"] / overlay_county_huc8["county_area_m2"]
+    sector_share_cols = [c for c in ["county_PS_share", "county_DO_share", "county_IN_share", "county_IR_share"] if c in dc_unique.columns]
+    if sector_share_cols:
+        dc_unique["county_dominant_sector"] = dc_unique.apply(lambda row: dominant_sector_row(row, sector_share_cols), axis=1)
+    else:
+        dc_unique["county_dominant_sector"] = np.nan
 
-    weighted_cols = []
-    for col in water_cols:
-        weighted_col = f"{col}_aw"
-        overlay_county_huc8[weighted_col] = overlay_county_huc8[col] * overlay_county_huc8["area_weight"]
-        weighted_cols.append(weighted_col)
+    dc_unique["supply_pathway_class"] = dc_unique.apply(classify_supply_pathway, axis=1)
 
-    huc8_water = overlay_county_huc8.groupby(["HUC8", "HUC8_NAME"])[weighted_cols].sum().reset_index()
-    huc8_water = huc8_water.rename(columns={f"{col}_aw": col for col in water_cols})
+    dc_export = pd.DataFrame(dc_unique.drop(columns="geometry"))
+    dc_export.to_csv(os.path.join(tabledir, "dc_water_supply_pathways.csv"), index=False)
 
-    dc_count_by_huc8 = dc_unique.groupby(["HUC8", "HUC8_NAME"]).size().reset_index(name="dc_count")
-    huc8_summary = huc8_p[["HUC8", "HUC8_NAME", "geometry"]].drop_duplicates().merge(huc8_water, on=["HUC8", "HUC8_NAME"], how="left").merge(dc_count_by_huc8, on=["HUC8", "HUC8_NAME"], how="left")
-    for col in water_cols:
-        if col in huc8_summary.columns:
-            huc8_summary[col] = huc8_summary[col].fillna(0)
-    huc8_summary["dc_count"] = huc8_summary["dc_count"].fillna(0).astype(int)
-    huc8_summary["has_dc"] = huc8_summary["dc_count"] > 0
-    huc8_summary["selected_total_MGD"] = huc8_summary.get("PS_WFrTo", 0) + huc8_summary.get("DO_WFrTo", 0) + huc8_summary.get("IN_WFrTo", 0) + huc8_summary.get("IR_WFrTo", 0)
+    huc8_dc_counts = dc_unique.groupby(["HUC8", "HUC8_NAME"], dropna=False).size().reset_index(name="dc_count")
+    huc8_dc_counts.to_csv(os.path.join(tabledir, "huc8_dc_counts.csv"), index=False)
 
-    for sector in ["PS", "DO", "IN", "IR"]:
-        huc8_summary[f"{sector}_share"] = safe_frac(huc8_summary.get(f"{sector}_WFrTo", 0), huc8_summary["selected_total_MGD"])
-        gw_col = f"{sector}_WGWFr"
-        sw_col = f"{sector}_WSWFr"
-        tot_col = f"{sector}_WFrTo"
-        if gw_col in huc8_summary.columns:
-            huc8_summary[f"{sector}_gw_fraction"] = safe_frac(huc8_summary[gw_col], huc8_summary[tot_col])
-        if sw_col in huc8_summary.columns:
-            huc8_summary[f"{sector}_sw_fraction"] = safe_frac(huc8_summary[sw_col], huc8_summary[tot_col])
-
-    huc8_summary["dominant_sector"] = huc8_summary.apply(lambda row: dominant_sector_row(row, ["PS_share", "DO_share", "IN_share", "IR_share"]), axis=1)
-
-    huc8_proximity = dc_unique.groupby(["HUC8", "HUC8_NAME"], as_index=False).agg(
-        mean_dist_to_major_river_km=("dist_to_major_river_km", "mean"),
-        median_dist_to_major_river_km=("dist_to_major_river_km", "median"),
-        min_dist_to_major_river_km=("dist_to_major_river_km", "min"),
-        mean_dist_to_reservoir_km=("dist_to_reservoir_km", "mean"),
-        median_dist_to_reservoir_km=("dist_to_reservoir_km", "median"),
-        min_dist_to_reservoir_km=("dist_to_reservoir_km", "min"),
-        pct_dc_within_10km_river=("river_within_10km", lambda s: np.nanmean(pd.to_numeric(s, errors="coerce"))),
-        pct_dc_within_10km_reservoir=("reservoir_within_10km", lambda s: np.nanmean(pd.to_numeric(s, errors="coerce"))),
+    aquifer_counts = (
+        dc_unique.dropna(subset=["AQUIFER_NAME"])
+        .groupby("AQUIFER_NAME")
+        .size()
+        .reset_index(name="dc_count")
+        .sort_values("dc_count", ascending=False)
     )
-    for col in ["pct_dc_within_10km_river", "pct_dc_within_10km_reservoir"]:
-        if col in huc8_proximity.columns:
-            huc8_proximity[col] = huc8_proximity[col] * 100.0
-    huc8_summary = huc8_summary.merge(huc8_proximity, on=["HUC8", "HUC8_NAME"], how="left")
+    aquifer_counts.to_csv(os.path.join(tabledir, "aquifer_dc_counts.csv"), index=False)
 
-    county_huc8_contrib = overlay_county_huc8.copy()
-    county_huc8_contrib["PS_WFrTo_contrib"] = county_huc8_contrib.get("PS_WFrTo", 0) * county_huc8_contrib["area_weight"]
-    county_huc8_contrib["selected_total_contrib"] = (
-        county_huc8_contrib.get("PS_WFrTo", 0)
-        + county_huc8_contrib.get("DO_WFrTo", 0)
-        + county_huc8_contrib.get("IN_WFrTo", 0)
-        + county_huc8_contrib.get("IR_WFrTo", 0)
-    ) * county_huc8_contrib["area_weight"]
-    county_huc8_table = county_huc8_contrib.groupby(["HUC8", "HUC8_NAME", "FIPS", "COUNTY_NAME"], as_index=False)[["PS_WFrTo_contrib", "selected_total_contrib"]].sum()
-    dominant_county_per_huc8 = county_huc8_table.sort_values(["HUC8", "PS_WFrTo_contrib", "selected_total_contrib"], ascending=[True, False, False]).groupby("HUC8", as_index=False).first().rename(columns={
-        "FIPS": "DOM_COUNTY_FIPS",
-        "COUNTY_NAME": "DOM_COUNTY_NAME",
-        "PS_WFrTo_contrib": "DOM_COUNTY_PS_MGD",
-        "selected_total_contrib": "DOM_COUNTY_TOTAL_MGD",
-    })
-    huc8_summary = huc8_summary.merge(dominant_county_per_huc8[["HUC8", "DOM_COUNTY_FIPS", "DOM_COUNTY_NAME", "DOM_COUNTY_PS_MGD", "DOM_COUNTY_TOTAL_MGD"]], on="HUC8", how="left")
+    county_counts = (
+        dc_unique.dropna(subset=["FIPS"])
+        .groupby(["FIPS", "COUNTY_NAME"])
+        .size()
+        .reset_index(name="dc_count")
+        .sort_values("dc_count", ascending=False)
+    )
+    county_counts.to_csv(os.path.join(tabledir, "county_dc_counts.csv"), index=False)
 
-    print("Calculating dominant aquifer by HUC8 area overlap...")
-    overlay_aq_huc8 = gpd.overlay(aquifers_p[["AQUIFER_NAME", "geometry"]], huc8_p[["HUC8", "HUC8_NAME", "geometry"]], how="intersection")
-    overlay_aq_huc8["aq_area_m2"] = overlay_aq_huc8.geometry.area
-    huc8_aq_area = overlay_aq_huc8.groupby(["HUC8", "HUC8_NAME", "AQUIFER_NAME"], as_index=False)["aq_area_m2"].sum()
-    dominant_aquifer_per_huc8 = huc8_aq_area.sort_values(["HUC8", "aq_area_m2"], ascending=[True, False]).groupby("HUC8", as_index=False).first().rename(columns={"AQUIFER_NAME": "DOM_AQUIFER", "aq_area_m2": "DOM_AQUIFER_AREA_M2"})
-    huc8_summary = huc8_summary.merge(dominant_aquifer_per_huc8[["HUC8", "DOM_AQUIFER", "DOM_AQUIFER_AREA_M2"]], on="HUC8", how="left")
+    summary = {
+        "n_data_centers": int(dc_unique["dc_id"].nunique()),
+        "n_huc8_with_dc": int(dc_unique["HUC8"].dropna().nunique()),
+        "n_counties_with_dc": int(dc_unique["FIPS"].dropna().nunique()),
+        "n_aquifers_with_dc": int(dc_unique["AQUIFER_NAME"].dropna().nunique()),
+        "share_within_10km_major_river": float(pd.to_numeric(dc_unique["river_within_10km"], errors="coerce").mean()),
+        "share_within_10km_reservoir": float(pd.to_numeric(dc_unique["reservoir_within_10km"], errors="coerce").mean()) if "reservoir_within_10km" in dc_unique.columns else np.nan,
+    }
+    pd.DataFrame([summary]).to_csv(os.path.join(tabledir, "summary_metrics.csv"), index=False)
 
-    dc_count_by_county = dc_unique.groupby(["FIPS", "COUNTY_NAME"], as_index=False).size().rename(columns={"size": "dc_count"})
-    county_supplier_table = counties_usgs.drop(columns="geometry").merge(dc_count_by_county, on=["FIPS", "COUNTY_NAME"], how="left")
-    county_supplier_table["dc_count"] = county_supplier_table["dc_count"].fillna(0).astype(int)
-    county_supplier_table["has_dc"] = county_supplier_table["dc_count"] > 0
-    county_supplier_table["selected_total_MGD"] = county_supplier_table.get("PS_WFrTo", 0) + county_supplier_table.get("DO_WFrTo", 0) + county_supplier_table.get("IN_WFrTo", 0) + county_supplier_table.get("IR_WFrTo", 0)
-    for sector in ["PS", "DO", "IN", "IR"]:
-        county_supplier_table[f"{sector}_share"] = safe_frac(county_supplier_table.get(f"{sector}_WFrTo", 0), county_supplier_table["selected_total_MGD"])
-        if f"{sector}_WGWFr" in county_supplier_table.columns:
-            county_supplier_table[f"{sector}_gw_fraction"] = safe_frac(county_supplier_table[f"{sector}_WGWFr"], county_supplier_table[f"{sector}_WFrTo"])
-        if f"{sector}_WSWFr" in county_supplier_table.columns:
-            county_supplier_table[f"{sector}_sw_fraction"] = safe_frac(county_supplier_table[f"{sector}_WSWFr"], county_supplier_table[f"{sector}_WFrTo"])
-    top_county_suppliers = county_supplier_table[county_supplier_table["dc_count"] > 0].sort_values(["dc_count", "PS_WFrTo", "selected_total_MGD"], ascending=[False, False, False])
-
-    aquifers_p["aq_area_m2"] = aquifers_p.geometry.area
-    total_aquifer_area = aquifers_p["aq_area_m2"].sum()
-    aq_area = aquifers_p.groupby("AQUIFER_NAME", as_index=False)["aq_area_m2"].sum()
-    aq_area["area_fraction"] = aq_area["aq_area_m2"] / total_aquifer_area
-    dc_aq_counts = dc_unique.groupby("AQUIFER_NAME", as_index=False).size().rename(columns={"size": "observed_dc_count"})
-    dc_total_with_aquifer = dc_aq_counts["observed_dc_count"].sum()
-    aq_enrichment = aq_area.merge(dc_aq_counts, on="AQUIFER_NAME", how="left")
-    aq_enrichment["observed_dc_count"] = aq_enrichment["observed_dc_count"].fillna(0).astype(int)
-    aq_enrichment["observed_dc_fraction"] = np.where(dc_total_with_aquifer > 0, aq_enrichment["observed_dc_count"] / dc_total_with_aquifer, np.nan)
-    aq_enrichment["expected_dc_count"] = aq_enrichment["area_fraction"] * dc_total_with_aquifer
-    aq_enrichment["enrichment_ratio"] = np.where(aq_enrichment["expected_dc_count"] > 0, aq_enrichment["observed_dc_count"] / aq_enrichment["expected_dc_count"], np.nan)
-    pvals = []
-    for _, row in aq_enrichment.iterrows():
-        n = int(dc_total_with_aquifer)
-        k = int(row["observed_dc_count"])
-        p0 = float(row["area_fraction"])
-        if n > 0 and 0 < p0 < 1:
-            pvals.append(binomtest(k, n, p=p0, alternative="two-sided").pvalue)
-        else:
-            pvals.append(np.nan)
-    aq_enrichment["p_value"] = pvals
-    aq_enrichment["p_fdr"] = fdr_bh(pd.Series(aq_enrichment["p_value"]).fillna(1.0).values)
-    aq_enrichment["significant_fdr_0.05"] = aq_enrichment["p_fdr"] < 0.05
-    aq_enrichment = aq_enrichment.sort_values("enrichment_ratio", ascending=False)
-    aq_enrichment_nonzero = aq_enrichment[aq_enrichment["observed_dc_count"] > 0].copy()
-
-    master_huc8_table = huc8_summary.drop(columns="geometry").copy()
-    dc_huc8_aquifer_counts = dc_unique.groupby(["HUC8", "HUC8_NAME", "AQUIFER_NAME"], as_index=False).size().rename(columns={"size": "dc_in_aquifer_count"})
-    dominant_dc_aquifer_per_huc8 = dc_huc8_aquifer_counts.sort_values(["HUC8", "dc_in_aquifer_count"], ascending=[True, False]).groupby("HUC8", as_index=False).first().rename(columns={"AQUIFER_NAME": "TOP_DC_AQUIFER", "dc_in_aquifer_count": "TOP_DC_AQUIFER_COUNT"})
-    master_huc8_table = master_huc8_table.merge(dominant_dc_aquifer_per_huc8[["HUC8", "TOP_DC_AQUIFER", "TOP_DC_AQUIFER_COUNT"]], on="HUC8", how="left")
-
-    preferred_cols = [
-        "HUC8", "HUC8_NAME", "dc_count", "has_dc", "selected_total_MGD",
-        "PS_WFrTo", "DO_WFrTo", "IN_WFrTo", "IR_WFrTo",
-        "PS_share", "DO_share", "IN_share", "IR_share", "dominant_sector",
-        "PS_gw_fraction", "PS_sw_fraction", "IN_gw_fraction", "IN_sw_fraction",
-        "DO_gw_fraction", "DO_sw_fraction", "IR_gw_fraction", "IR_sw_fraction",
-        "mean_dist_to_major_river_km", "median_dist_to_major_river_km", "min_dist_to_major_river_km",
-        "mean_dist_to_reservoir_km", "median_dist_to_reservoir_km", "min_dist_to_reservoir_km",
-        "pct_dc_within_10km_river", "pct_dc_within_10km_reservoir",
-        "DOM_COUNTY_FIPS", "DOM_COUNTY_NAME", "DOM_COUNTY_PS_MGD", "DOM_COUNTY_TOTAL_MGD",
-        "DOM_AQUIFER", "TOP_DC_AQUIFER", "TOP_DC_AQUIFER_COUNT",
-    ]
-    master_huc8_table = master_huc8_table[[col for col in preferred_cols if col in master_huc8_table.columns] + [col for col in master_huc8_table.columns if col not in preferred_cols]]
-    top_dc_huc8 = master_huc8_table[master_huc8_table["has_dc"]].sort_values(["dc_count", "selected_total_MGD"], ascending=[False, False]).head(25)
-
-    dc_group = master_huc8_table[master_huc8_table["has_dc"]].copy()
-    non_dc_group = master_huc8_table[~master_huc8_table["has_dc"]].copy()
-    stats_vars = ["selected_total_MGD", "PS_share", "DO_share", "IN_share", "IR_share"]
-    for col in ["PS_gw_fraction", "PS_sw_fraction", "IN_gw_fraction", "IN_sw_fraction", "DO_gw_fraction", "DO_sw_fraction", "IR_gw_fraction", "IR_sw_fraction"]:
-        if col in master_huc8_table.columns:
-            stats_vars.append(col)
-    stats_results = []
-    for var in stats_vars:
-        stat, pvalue, n_dc, n_non_dc = mw_test(dc_group[var], non_dc_group[var])
-        stats_results.append({
-            "variable": var,
-            "dc_median": pd.to_numeric(dc_group[var], errors="coerce").median(),
-            "non_dc_median": pd.to_numeric(non_dc_group[var], errors="coerce").median(),
-            "dc_mean": pd.to_numeric(dc_group[var], errors="coerce").mean(),
-            "non_dc_mean": pd.to_numeric(non_dc_group[var], errors="coerce").mean(),
-            "mannwhitney_u": stat,
-            "p_value": pvalue,
-            "n_dc": n_dc,
-            "n_non_dc": n_non_dc,
-        })
-    stats_results = pd.DataFrame(stats_results)
-    stats_results["p_fdr"] = fdr_bh(stats_results["p_value"].fillna(1.0).values)
-    stats_results["significant_fdr_0.05"] = stats_results["p_fdr"] < 0.05
-
-    dc_proximity_summary = pd.DataFrame({
-        "metric": [
-            "mean_dist_to_major_river_km", "median_dist_to_major_river_km",
-            "mean_dist_to_reservoir_km", "median_dist_to_reservoir_km",
-            "pct_within_5km_river", "pct_within_10km_river", "pct_within_25km_river", "pct_within_50km_river",
-            "pct_within_5km_reservoir", "pct_within_10km_reservoir", "pct_within_25km_reservoir", "pct_within_50km_reservoir",
-        ],
-        "value": [
-            pd.to_numeric(dc_unique["dist_to_major_river_km"], errors="coerce").mean(),
-            pd.to_numeric(dc_unique["dist_to_major_river_km"], errors="coerce").median(),
-            pd.to_numeric(dc_unique["dist_to_reservoir_km"], errors="coerce").mean(),
-            pd.to_numeric(dc_unique["dist_to_reservoir_km"], errors="coerce").median(),
-            pd.to_numeric(dc_unique["river_within_5km"], errors="coerce").mean() * 100 if "river_within_5km" in dc_unique.columns else np.nan,
-            pd.to_numeric(dc_unique["river_within_10km"], errors="coerce").mean() * 100 if "river_within_10km" in dc_unique.columns else np.nan,
-            pd.to_numeric(dc_unique["river_within_25km"], errors="coerce").mean() * 100 if "river_within_25km" in dc_unique.columns else np.nan,
-            pd.to_numeric(dc_unique["river_within_50km"], errors="coerce").mean() * 100 if "river_within_50km" in dc_unique.columns else np.nan,
-            pd.to_numeric(dc_unique["reservoir_within_5km"], errors="coerce").mean() * 100 if "reservoir_within_5km" in dc_unique.columns else np.nan,
-            pd.to_numeric(dc_unique["reservoir_within_10km"], errors="coerce").mean() * 100 if "reservoir_within_10km" in dc_unique.columns else np.nan,
-            pd.to_numeric(dc_unique["reservoir_within_25km"], errors="coerce").mean() * 100 if "reservoir_within_25km" in dc_unique.columns else np.nan,
-            pd.to_numeric(dc_unique["reservoir_within_50km"], errors="coerce").mean() * 100 if "reservoir_within_50km" in dc_unique.columns else np.nan,
-        ],
-    })
-    pathway_counts = dc_unique["combined_supply_pathway_proxy"].value_counts(dropna=False).rename_axis("combined_supply_pathway_proxy").reset_index(name="dc_count")
-
-    master_csv = os.path.join(tabledir, "master_huc8_integrated_table.csv")
-    top_huc8_csv = os.path.join(tabledir, "top_dc_huc8_integrated_table.csv")
-    county_csv = os.path.join(tabledir, "county_supplier_proxy_table.csv")
-    top_county_csv = os.path.join(tabledir, "top_dc_counties_supplier_proxy.csv")
-    aq_csv = os.path.join(tabledir, "aquifer_enrichment_table.csv")
-    stats_csv = os.path.join(tabledir, "dc_vs_non_dc_huc8_stats.csv")
-    dc_assign_csv = os.path.join(tabledir, "data_centers_integrated_water_pathways.csv")
-    dc_summary_csv = os.path.join(tabledir, "dc_proximity_summary.csv")
-    pathway_csv = os.path.join(tabledir, "combined_supply_pathway_counts.csv")
-
-    master_huc8_table.to_csv(master_csv, index=False)
-    top_dc_huc8.to_csv(top_huc8_csv, index=False)
-    county_supplier_table.to_csv(county_csv, index=False)
-    top_county_suppliers.to_csv(top_county_csv, index=False)
-    aq_enrichment_nonzero.to_csv(aq_csv, index=False)
-    stats_results.to_csv(stats_csv, index=False)
-    dc_proximity_summary.to_csv(dc_summary_csv, index=False)
-    pathway_counts.to_csv(pathway_csv, index=False)
-    dc_unique.to_crs("EPSG:4326").drop(columns="geometry").to_csv(dc_assign_csv, index=False)
-
-    print("Making figures...")
-    fig, ax = plt.subplots(figsize=(7, 5))
-    ax.boxplot([dc_group["selected_total_MGD"].dropna(), non_dc_group["selected_total_MGD"].dropna()], tick_labels=["DC HUC8", "Non-DC HUC8"], showfliers=False)
-    ax.set_ylabel("Total water withdrawals (MGD)")
-    ax.set_title("Total water withdrawals in HUC8 basins")
-    save_fig(fig, os.path.join(figdir, "fig1_total_withdrawals_dc_vs_non_dc.png"))
-    plt.close(fig)
-
-    plot_df = pd.DataFrame({
-        "Sector": ["Public supply", "Domestic", "Industrial", "Irrigation"],
-        "DC_HUC8_mean_share": [dc_group["PS_share"].mean(), dc_group["DO_share"].mean(), dc_group["IN_share"].mean(), dc_group["IR_share"].mean()],
-        "Non_DC_HUC8_mean_share": [non_dc_group["PS_share"].mean(), non_dc_group["DO_share"].mean(), non_dc_group["IN_share"].mean(), non_dc_group["IR_share"].mean()],
-    })
-    x = np.arange(len(plot_df))
-    width = 0.38
-    fig, ax = plt.subplots(figsize=(8, 5))
-    ax.bar(x - width / 2, plot_df["DC_HUC8_mean_share"], width=width, label="DC HUC8")
-    ax.bar(x + width / 2, plot_df["Non_DC_HUC8_mean_share"], width=width, label="Non-DC HUC8")
-    ax.set_xticks(x)
-    ax.set_xticklabels(plot_df["Sector"], rotation=20)
-    ax.set_ylabel("Mean sector share")
-    ax.set_title("Mean water-use sector shares: DC HUC8 vs non-DC HUC8")
-    ax.legend()
-    save_fig(fig, os.path.join(figdir, "fig2_sector_shares_dc_vs_non_dc.png"))
-    plt.close(fig)
-
-    if "PS_gw_fraction" in master_huc8_table.columns:
-        vals = pd.DataFrame({
-            "group": ["DC HUC8"] * len(dc_group) + ["Non-DC HUC8"] * len(non_dc_group),
-            "value": pd.concat([dc_group["PS_gw_fraction"], non_dc_group["PS_gw_fraction"]], ignore_index=True),
-        }).dropna()
-        if len(vals) > 0:
-            fig, ax = plt.subplots(figsize=(6, 5))
-            vals.boxplot(column="value", by="group", ax=ax)
-            plt.suptitle("")
-            ax.set_title("Public-supply groundwater fraction: DC vs non-DC HUC8")
-            ax.set_ylabel("Groundwater fraction")
-            save_fig(fig, os.path.join(figdir, "fig3_ps_groundwater_fraction_boxplot.png"))
-            plt.close(fig)
-
-    if len(aq_enrichment_nonzero) > 0:
-        aq_plot = aq_enrichment_nonzero.head(15).sort_values("enrichment_ratio", ascending=True)
-        fig, ax = plt.subplots(figsize=(9, 6))
-        ax.barh(aq_plot["AQUIFER_NAME"], aq_plot["enrichment_ratio"])
-        ax.set_xlabel("Enrichment ratio (Observed / Expected by area)")
+    if len(aquifer_counts) > 0:
+        fig, ax = plt.subplots(figsize=(11, 6))
+        plot_df = aquifer_counts.head(15).iloc[::-1]
+        ax.barh(plot_df["AQUIFER_NAME"], plot_df["dc_count"])
+        ax.set_xlabel("Number of data centers")
         ax.set_ylabel("Aquifer")
-        ax.set_title("Aquifers with highest data-center overrepresentation")
-        save_fig(fig, os.path.join(figdir, "fig4_top_aquifer_enrichment.png"))
+        ax.set_title("Top aquifers by data center count")
+        save_fig(fig, os.path.join(figdir, "top_aquifers_by_dc_count.png"))
         plt.close(fig)
 
-    fig, ax = plt.subplots(figsize=(8, 5))
-    pd.to_numeric(dc_unique["dist_to_major_river_km"], errors="coerce").dropna().hist(bins=30, ax=ax)
+    fig, ax = plt.subplots(figsize=(9, 6))
+    river_dist = pd.to_numeric(dc_unique["dist_to_major_river_km"], errors="coerce").dropna()
+    if len(river_dist) > 0:
+        ax.hist(river_dist, bins=40)
     ax.set_xlabel("Distance to nearest major river (km)")
     ax.set_ylabel("Number of data centers")
-    ax.set_title("Distribution of data-center distance to nearest major river")
-    save_fig(fig, os.path.join(figdir, "fig5_distance_to_major_river_histogram.png"))
+    ax.set_title("Distance from data centers to major rivers (ORD_STRA >= 5)")
+    save_fig(fig, os.path.join(figdir, "distance_to_major_river_histogram.png"))
     plt.close(fig)
 
-    if pd.to_numeric(dc_unique["dist_to_reservoir_km"], errors="coerce").notna().sum() > 0:
-        fig, ax = plt.subplots(figsize=(8, 5))
-        pd.to_numeric(dc_unique["dist_to_reservoir_km"], errors="coerce").dropna().hist(bins=30, ax=ax)
-        ax.set_xlabel("Distance to nearest reservoir/lake (km)")
+    if "dist_to_reservoir_km" in dc_unique.columns:
+        fig, ax = plt.subplots(figsize=(9, 6))
+        res_dist = pd.to_numeric(dc_unique["dist_to_reservoir_km"], errors="coerce").dropna()
+        if len(res_dist) > 0:
+            ax.hist(res_dist, bins=40)
+        ax.set_xlabel("Distance to nearest reservoir/waterbody (km)")
         ax.set_ylabel("Number of data centers")
-        ax.set_title("Distribution of data-center distance to nearest reservoir/lake")
-        save_fig(fig, os.path.join(figdir, "fig6_distance_to_reservoir_histogram.png"))
+        ax.set_title("Distance from data centers to reservoirs/waterbodies")
+        save_fig(fig, os.path.join(figdir, "distance_to_reservoir_histogram.png"))
         plt.close(fig)
 
-    county_plot = top_county_suppliers.head(15).sort_values("dc_count", ascending=True)
-    fig, ax = plt.subplots(figsize=(9, 6))
-    ax.barh(county_plot["COUNTY_NAME"].astype(str) + " (" + county_plot["FIPS"].astype(str) + ")", county_plot["dc_count"])
-    ax.set_xlabel("Number of data centers")
-    ax.set_ylabel("County")
-    ax.set_title("Top counties containing data centers")
-    save_fig(fig, os.path.join(figdir, "fig7_top_dc_counties.png"))
-    plt.close(fig)
+    report_lines = [
+        "Integrated Data Center Water Supply Pathways Analysis",
+        "===================================================",
+        f"Data centers analyzed: {summary['n_data_centers']}",
+        f"HUC8 basins hosting data centers: {summary['n_huc8_with_dc']}",
+        f"Counties hosting data centers: {summary['n_counties_with_dc']}",
+        f"Aquifers hosting data centers: {summary['n_aquifers_with_dc']}",
+        f"Share within 10 km of major rivers (ORD_STRA >= 5): {summary['share_within_10km_major_river']:.3f}" if pd.notna(summary['share_within_10km_major_river']) else "Share within 10 km of major rivers (ORD_STRA >= 5): NA",
+        f"Share within 10 km of reservoirs: {summary['share_within_10km_reservoir']:.3f}" if pd.notna(summary['share_within_10km_reservoir']) else "Share within 10 km of reservoirs: NA",
+        "",
+        "Top aquifers by data center count:",
+    ]
+    if len(aquifer_counts) > 0:
+        for _, row in aquifer_counts.head(10).iterrows():
+            report_lines.append(f"- {row['AQUIFER_NAME']}: {int(row['dc_count'])}")
+    else:
+        report_lines.append("- No aquifer assignments available.")
 
-    fig, ax = plt.subplots(figsize=(9, 5))
-    plot_path = pathway_counts.sort_values("dc_count", ascending=True)
-    ax.barh(plot_path["combined_supply_pathway_proxy"], plot_path["dc_count"])
-    ax.set_xlabel("Number of data centers")
-    ax.set_ylabel("Combined supply pathway proxy")
-    ax.set_title("Combined groundwater/surface-water pathway interpretation")
-    save_fig(fig, os.path.join(figdir, "fig8_combined_supply_pathway_proxy_counts.png"))
-    plt.close(fig)
+    report_path = os.path.join(outdir, "analysis_summary.txt")
+    with open(report_path, "w", encoding="utf-8") as f:
+        f.write("\n".join(report_lines))
+    print(f"[SAVED REPORT] {report_path}")
 
-    sector_plot_df = master_huc8_table[master_huc8_table["has_dc"]][["HUC8_NAME", "dc_count", "PS_share", "DO_share", "IN_share", "IR_share"]].copy().sort_values(["dc_count", "PS_share"], ascending=[False, False]).head(15)
-    for col in ["PS_share", "DO_share", "IN_share", "IR_share"]:
-        sector_plot_df[col] = pd.to_numeric(sector_plot_df[col], errors="coerce").fillna(0)
-    fig, ax = plt.subplots(figsize=(12, 6))
-    bottom = np.zeros(len(sector_plot_df))
-    labels = sector_plot_df["HUC8_NAME"].astype(str).tolist()
-    for col, label in [("PS_share", "Public supply"), ("DO_share", "Domestic"), ("IN_share", "Industrial"), ("IR_share", "Irrigation")]:
-        ax.bar(labels, sector_plot_df[col], bottom=bottom, label=label)
-        bottom += sector_plot_df[col].values
-    ax.set_ylabel("Sector share")
-    ax.set_title("Sector composition of top 15 HUC8s containing data centers")
-    ax.legend(loc="lower left")
-    plt.xticks(rotation=80, ha="right")
-    save_fig(fig, os.path.join(figdir, "fig9_top15_huc8_sector_composition_stacked.png"))
-    plt.close(fig)
-
-    summary_txt = os.path.join(outdir, "summary_report.txt")
-    with open(summary_txt, "w", encoding="utf-8") as handle:
-        handle.write("INTEGRATED DATA CENTER WATER SUPPLY PATHWAYS ANALYSIS\n")
-        handle.write("===============================================\n\n")
-        handle.write(f"HUC source type used: {huc_source_type}\n")
-        handle.write(f"DC file: {paths.dc}\n")
-        handle.write(f"USGS file: {paths.usgs}\n")
-        handle.write(f"HUC file: {paths.huc8}\n")
-        handle.write(f"County file: {paths.county}\n")
-        handle.write(f"Aquifer file: {paths.aquifer}\n")
-        handle.write(f"River file: {paths.river}\n")
-        handle.write(f"Reservoir file: {paths.reservoir}\n\n")
-        handle.write(f"Total data centers: {dc_unique['dc_id'].nunique()}\n")
-        handle.write(f"Rows in raw joined table: {len(dc_joined)}\n")
-        handle.write(f"Rows in deduplicated table: {len(dc_unique)}\n")
-        handle.write(f"HUC8s with data centers: {master_huc8_table['has_dc'].sum()}\n")
-        handle.write(f"HUC8s without data centers: {(~master_huc8_table['has_dc']).sum()}\n")
-        handle.write(f"Counties with data centers: {top_county_suppliers['FIPS'].nunique()}\n")
-        handle.write(f"Aquifers containing data centers: {aq_enrichment_nonzero['AQUIFER_NAME'].nunique()}\n\n")
-        handle.write("PROXIMITY SUMMARY\n-----------------\n")
-        handle.write(dc_proximity_summary.to_string(index=False))
-        handle.write("\n\nCOMBINED SUPPLY PATHWAY COUNTS\n------------------------------\n")
-        handle.write(pathway_counts.to_string(index=False))
-        handle.write("\n\nTOP HUC8S CONTAINING DATA CENTERS\n--------------------------------\n")
-        handle.write(top_dc_huc8.head(15).to_string(index=False))
-        handle.write("\n\nTOP COUNTY SUPPLIER PROXIES CONTAINING DATA CENTERS\n---------------------------------------------------\n")
-        handle.write(top_county_suppliers.head(15).to_string(index=False))
-        handle.write("\n\nTOP AQUIFERS BY ENRICHMENT\n--------------------------\n")
-        handle.write(aq_enrichment_nonzero.head(15).to_string(index=False))
-        handle.write("\n\nDC HUC8 VS NON-DC HUC8 STATISTICS\n---------------------------------\n")
-        handle.write(stats_results.to_string(index=False))
-        handle.write("\n")
-
-    print("\n========================")
-    print("KEY RESULTS")
-    print("========================")
-    print(f"HUC source type used: {huc_source_type}")
-    print(f"Total data centers: {dc_unique['dc_id'].nunique()}")
-    print(f"Rows in raw joined table: {len(dc_joined)}")
-    print(f"Rows in deduplicated table: {len(dc_unique)}")
-    print(f"HUC8s with data centers: {master_huc8_table['has_dc'].sum()}")
-    print(f"HUC8s without data centers: {(~master_huc8_table['has_dc']).sum()}")
-    print(f"Counties with data centers: {top_county_suppliers['FIPS'].nunique()}")
-    print(f"Aquifers containing data centers: {aq_enrichment_nonzero['AQUIFER_NAME'].nunique()}")
-    print("\nOutputs written to:")
-    print(f"  Tables : {tabledir}")
-    print(f"  Figures: {figdir}")
-    print(f"  Summary: {summary_txt}")
+    print("\nDone.")
+    print("Results written to:", outdir)
 
 
 if __name__ == "__main__":
