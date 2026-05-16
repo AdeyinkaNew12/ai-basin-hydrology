@@ -1,10 +1,6 @@
 __pycache__/
 *.pyc
-results/
-data/
-*.shp
-*.dbf
-*.shx
-*.prj
-*.gpkg
-*.csv
+.ipynb_checkpoints/
+outputs/
+.DS_Store
+*.zip
