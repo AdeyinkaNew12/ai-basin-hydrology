@@ -2,7 +2,7 @@
 """
 NWM Hydro-Regime Analysis
 
-This script builds a hydro-regime analysis using National Water Model discharge information and facility presence data. It produces basin-level hydro-regime metrics, ECDF outputs, and optional odds-ratio/logistic summaries for AI, Power, and TRI siting.
+This script builds a hydro-regime analysis using National Water Model discharge information and facility presence data. It produces basin-level hydro-regime characterictics, ECDF outputs, and optional odds-ratio/logistic summaries for AI, Power, and TRI siting.
 
 Input files used:
 - DC_CONUS.csv
