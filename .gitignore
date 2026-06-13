@@ -5,3 +5,7 @@ outputs/
 .DS_Store
 *.zip
 
+.venv/
+venv/
+*.bak
+rc
