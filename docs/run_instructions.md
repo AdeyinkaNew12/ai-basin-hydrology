@@ -1,16 +1,41 @@
-# Run instructions
+# Run Instructions
 
-Run all analyses:
-
-```bash
-python src/run_all.py
-```
-
-Run one analysis:
+## Activate Environment
 
 ```bash
-python src/run_ecdf_sector_basin_matched.py
+cd /mnt/disk3/aoolaseinde/projects/ai-basin-hydrology
+source venv/bin/activate
 ```
 
-For GitHub one-click execution, install a self-hosted GitHub Actions runner on the server and use the workflow in `.github/workflows/run_all.yml`.
+## Run Complete Workflow
+
+```bash
+python3 src/run_all.py
+```
+
+This command executes all production analyses and writes outputs to the central results directory.
+
+## Output Location
+
+```text
+/mnt/disk3/aoolaseinde/projects/integrated_dc_water_pathways/results/
+```
+
+Each analysis creates its own subdirectory within the results folder.
+
+## Run Individual Analyses
+
+To run a single analysis:
+
+```bash
+python3 src/<script_name>.py
+```
+
+Example:
+
+```bash
+python3 src/run_nwm_hydroregime.py
+```
+
+
 
