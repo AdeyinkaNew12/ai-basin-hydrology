@@ -13,7 +13,7 @@ Workflow:
 """
 
 import os
-from common_paths import DATA_FOLDERS
+from common_paths import DATA_FOLDERS, output_folder
 import time
 import numpy as np
 import pandas as pd
@@ -443,7 +443,7 @@ def main():
 
     odds_csv = os.path.join(
         OUT_DIR,
-        "Analysis1_threshold_odds_ratios_BASIN_FILTER_ORD5.csv",
+        "WaterProximity_threshold_odds_ratios_ORD5.csv",
     )
 
     res.to_csv(odds_csv, index=False)
@@ -554,7 +554,7 @@ def main():
 
     out_png = os.path.join(
         OUT_DIR,
-        "Analysis1_threshold_plot_panels_BASIN_FILTER_ORD5.png",
+        "WaterProximity_threshold_plot_panels_ORD5.png",
     )
 
     plt.savefig(out_png, dpi=400, bbox_inches="tight")
