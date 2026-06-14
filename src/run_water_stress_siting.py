@@ -63,7 +63,7 @@ from scipy.stats import chi2_contingency
 # -------------------------
 # PATHS (EDIT IF NEEDED)
 # -------------------------
-PROJECT_DIR = Path("/mnt/disk3/aoolaseinde/data/WaterProject")
+PROJECT_DIR = Path(DATA_FOLDERS["water_project"])
 
 AI_FILE       = PROJECT_DIR / "DC_CONUS.csv"
 POWER_FILE    = PROJECT_DIR / "Power.xlsx"
@@ -71,7 +71,7 @@ TRI_FILE      = PROJECT_DIR / "TRI_2024.csv"
 BASINS_SHP    = PROJECT_DIR / "hybas_na_lev08_v1c.shp"
 AQUEDUCT_CSV  = PROJECT_DIR / "Aqueduct40_baseline_monthly_y2023m07d05.csv"
 
-OUT_DIR = PROJECT_DIR / "analysis4_outputs_repro_BOTH_CLEAN"
+OUT_DIR = Path(output_folder("water_stress_siting"))
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # -------------------------

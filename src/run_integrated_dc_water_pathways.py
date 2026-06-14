@@ -18,6 +18,8 @@ Server/GitHub version:
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import argparse
 import glob
 import os
@@ -31,12 +33,14 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
+from common_paths import DATA_FOLDERS, output_folder
 from scipy.stats import mannwhitneyu
 
 
 TARGET_CRS = "EPSG:5070"
-DEFAULT_DATA_ROOT = "/mnt/disk3/aoolaseinde/data/Groundwater"
-DEFAULT_OUTPUT_ROOT = "/mnt/disk3/aoolaseinde/projects/integrated_dc_water_pathways/results"
+DEFAULT_DATA_ROOT = DATA_FOLDERS["groundwater"]
+DEFAULT_OUTPUT_ROOT = output_folder("integrated_dc_water_pathways")
 MAJOR_RIVER_ORD_STRA = 5
 DIST_BINS_KM = [5, 10, 25, 50]
 USE_HYDROLAKES_MIN_AREA_FILTER = False
@@ -362,7 +366,7 @@ def resolve_paths(data_root: str) -> ResolvedPaths:
     hints = ["groundwater", "water-project", "wbd_national_gpkg", "hydrolakes", "hydrorivers"]
 
     dc_path = find_file_smart(
-        data_root,
+        Path(DATA_FOLDERS["water_project"]),
         exact_candidates=[os.path.join(data_root, "DC_CONUS.csv"), os.path.join(data_root, "DC_CONUS .csv")],
         search_patterns=["DC_CONUS.csv", "DC_CONUS .csv", "*DC*CONUS*.csv"],
         label="DC CSV",

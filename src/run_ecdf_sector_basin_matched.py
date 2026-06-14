@@ -2,7 +2,7 @@
 """
 ECDF Sector vs Basin-Matched Random Analysis
 
-This script generates ECDF plots and statistical comparison tables for AI, Power, and TRI facility distances against basin-matched random locations. It produces journal-ready ECDF figures, descriptive statistics, KS/Mann-Whitney tests, Cliff’s delta effect sizes, and FDR-adjusted summary tables.
+This script generates ECDF plots and statistical comparison tables for AI, Power, and TRI facility distances against basin-matched random locations. It produces journal-ready ECDF textfigures, descriptive statistics, KS/Mann-Whitney tests, Cliff’s delta effect sizes, and FDR-adjusted summary tables.
 
 Input files used:
 - DC_CONUS.csv
@@ -53,11 +53,6 @@ SECTORS = ['AI', 'Power', 'TRI']
 
 SEC_COLORS = {'AI': '#1f77b4', 'Power': '#2ca02c', 'TRI': '#9467bd'}
 FIG_OUT = os.path.join(OUT_DIR, f'ECDF_{COL}_JOURNAL.png')
-
-SUBTITLE = (
-    'Tests: two-sample Kolmogorov–Smirnov (ECDF shape) + Mann–Whitney U (median shift); '
-    'effect size: Cliff’s δ; multiple testing: Benjamini–Hochberg FDR (q).'
-)
 
 ECDF_XMAX_Q = 0.995
 ECDF_LOG_XMIN = 0.05
@@ -190,7 +185,6 @@ ax.set_ylim(0, 1.02)
 
 title_main = 'ECDF Distance to Major Rivers — Sector vs Basin-matched Random'
 ax.set_title(title_main, pad=18, fontweight='semibold')
-ax.text(0.5, 1.02, SUBTITLE, ha='center', va='bottom', transform=ax.transAxes, fontsize=10.5)
 
 ax.set_xlabel('Distance to major rivers (km, log scale) — HydroRIVERS ORD_STRA ≥ 5')
 ax.set_ylabel('ECDF')
@@ -292,7 +286,7 @@ final_disp['IQR (random)'] = final_disp.apply(lambda r: f"{fmt_num(r['IQR25_rand
 final_disp['KS D'] = final_disp['KS_D'].apply(lambda x: fmt_num(x, 3))
 final_disp['KS p'] = final_disp['KS_p'].apply(fmt_p)
 final_disp['KS q(FDR)'] = final_disp['KS_q_FDR'].apply(fmt_p)
-final_disp['MWU p'] = final_disp['MWU_p'].apply(fmt_p)
+final_disp['MWU p'] = final_disp['MWU_p'].apply(fmt_p) 
 final_disp['MWU q(FDR)'] = final_disp['MWU_q_FDR'].apply(fmt_p)
 final_disp["Cliff's δ"] = final_disp['Cliffs_delta'].apply(lambda x: fmt_num(x, 3))
 final_disp['Δ median (sector-random)'] = final_disp['Median_diff_sector_minus_random'].apply(lambda x: fmt_num(x, 2))
@@ -309,5 +303,5 @@ final_table = final_disp[[
 OUT_FINAL = os.path.join(OUT_DIR, f'TABLE_ECDF_FINAL_JOURNAL_{COL}.csv')
 final_table.to_csv(OUT_FINAL, index=False)
 print('✅ Saved:', OUT_FINAL)
+print(final_table)
 
-display(final_table)

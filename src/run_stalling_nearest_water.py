@@ -61,6 +61,7 @@ DC_PATH    = os.path.join(PROJECT_DIR, "Stalling.csv")
 RIVERS_SHP = os.path.join(DEFAULT_DATA_ROOT, "HydroRIVERS_v10_na.shp")
 COAST_SHP  = os.path.join(PROJECT_DIR, "ne_10m_coastline.shp")
 LAKES_GDB  = os.path.join(PROJECT_DIR, "_HYDROLAKES_GDB", "HydroLAKES_polys_v10.gdb")
+LAKES_SHP  = os.path.join(PROJECT_DIR, "HydroLAKES_polys_v10.shp")
 
 OUT_CSV = os.path.join(OUT_DIR, "stalling_nearest_water.csv")
 OUT_MAP = os.path.join(OUT_DIR, "stalling_proof_map.png")
@@ -96,8 +97,7 @@ print("Point:", lat, lon)
 print("Loading water layers…")
 rivers = gpd.read_file(RIVERS_SHP).to_crs("EPSG:4326")
 coast  = gpd.read_file(COAST_SHP).to_crs("EPSG:4326")
-layers = fiona.listlayers(LAKES_GDB)
-lakes = gpd.read_file(LAKES_GDB, layer=layers[0]).to_crs("EPSG:4326")
+lakes = gpd.read_file(LAKES_SHP).to_crs("EPSG:4326")
 
 stream_col = next(c for c in STREAM_ORDER_COL_CANDIDATES if c in rivers.columns)
 rivers = rivers[rivers[stream_col] >= RIVER_STREAMORDER_THRESHOLD]
