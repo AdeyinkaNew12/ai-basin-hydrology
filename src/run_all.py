@@ -14,13 +14,12 @@ from pathlib import Path
 
 SCRIPTS = [
     "run_integrated_dc_water_pathways.py",
+    "run_groundwater_dc_analysis.py",
     "run_major_river_proximity.py",
     "run_threshold_water_proximity_ord5.py",
     "run_water_distance_ecdf_allfeatures.py",
     "run_huc2_facility_share_map.py",
-    "run_nwm_hydroregime.py",
-    "run_nwm_ecdf_matched_random.py",
-    "run_nwm_hydroregime_baseline_comparison.py",
+    "run_nwm_hydroregime_recomputed_journal.py",
     "run_water_stress_siting.py",
 ]
 
