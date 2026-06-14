@@ -36,10 +36,7 @@ DATA_ROOT = DATA_FOLDERS["base_data"] if "base_data" in DATA_FOLDERS else os.pat
 PROJECT_DATA_DIR = os.path.join(DATA_ROOT, "WaterProject")
 GROUNDWATER_DIR = os.path.join(DATA_ROOT, "Groundwater")
 
-OUT_DIR = os.path.join(
-    PROJECT_DATA_DIR,
-    "Water_Proximity_FROM_RAW_BASIN_FILTER_ORD5"
-)
+OUT_DIR = output_folder("water_proximity_threshold_ord5")
 
 os.makedirs(OUT_DIR, exist_ok=True)
 
