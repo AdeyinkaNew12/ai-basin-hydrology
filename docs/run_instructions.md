@@ -37,5 +37,14 @@ Example:
 python3 src/run_nwm_hydroregime.py
 ```
 
+## Path Configuration
+
+Input and output locations are managed through:
+
+```text
+src/common_paths.py
+```
+
+Users should configure data and output directories in `common_paths.py` before running analyses on a new system.
 
 
