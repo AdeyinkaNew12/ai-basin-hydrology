@@ -36,7 +36,7 @@ from common_paths import DATA_FOLDERS, output_folder
 
 
 DEFAULT_DATA_ROOT = DATA_FOLDERS["water_project"]
-DEFAULT_OUTPUT_ROOT = output_folder("analysis5_major_river_proximity")
+DEFAULT_OUTPUT_ROOT = output_folder("major_river_proximity")
 os.makedirs(DEFAULT_OUTPUT_ROOT, exist_ok=True)
 
 AI_FILE = os.path.join(DEFAULT_DATA_ROOT, "DC_CONUS.csv")
@@ -47,11 +47,11 @@ RIVERS_SHP = os.path.join(DEFAULT_DATA_ROOT, "HydroRIVERS_v10_na.shp")
 
 OUT_FIG = os.path.join(
     DEFAULT_OUTPUT_ROOT,
-    "analysis5_ORD_STRA_majorRivers_within10km_AI_Power_TRI.png",
+    "MajorRiverProximity_ORD_STRA_within10km_AI_Power_TRI.png",
 )
 OUT_TABLE = os.path.join(
     DEFAULT_OUTPUT_ROOT,
-    "analysis5_proximity_summary_ORD_STRA.csv",
+    "MajorRiverProximity_summary_ORD_STRA.csv",
 )
 
 SEED = 7
@@ -260,7 +260,7 @@ def nearest_dist_km(points_geoseries, tree, river_geoms, chunk=20000):
 
 
 def main():
-    print("[INFO] Analysis 5: Major river proximity")
+    print("[INFO] Major river proximity")
     print("[INFO] DATA ROOT:", DEFAULT_DATA_ROOT)
     print("[INFO] OUTPUT ROOT:", DEFAULT_OUTPUT_ROOT)
 

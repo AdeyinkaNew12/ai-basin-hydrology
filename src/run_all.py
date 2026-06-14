@@ -2,7 +2,7 @@
 """
 Run All AI Basin Hydrology Analyses
 
-This script runs the active, non-duplicative repository analysis workflow.
+This script runs the active final workflow in sequence.
 It uses central paths defined in src/common_paths.py.
 """
 
@@ -14,6 +14,7 @@ from pathlib import Path
 
 SCRIPTS = [
     "run_integrated_dc_water_pathways.py",
+    "run_major_river_proximity.py",
     "run_threshold_water_proximity_ord5.py",
     "run_water_distance_ecdf_allfeatures.py",
     "run_huc2_facility_share_map.py",
