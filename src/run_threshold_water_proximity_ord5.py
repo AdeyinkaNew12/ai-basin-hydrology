@@ -13,6 +13,7 @@ Workflow:
 """
 
 import os
+from common_paths import DATA_FOLDERS
 import time
 import numpy as np
 import pandas as pd
@@ -30,7 +31,7 @@ from shapely.geometry import Point
 # SERVER PATHS
 # ============================================================
 
-DATA_ROOT = "/mnt/disk3/aoolaseinde/data"
+DATA_ROOT = DATA_FOLDERS["water_project"]
 
 PROJECT_DATA_DIR = os.path.join(DATA_ROOT, "WaterProject")
 GROUNDWATER_DIR = os.path.join(DATA_ROOT, "Groundwater")
