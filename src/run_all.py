@@ -14,7 +14,8 @@ from pathlib import Path
 
 SCRIPTS = [
     "run_integrated_dc_water_pathways.py",
-    # "run_ecdf_sector_basin_matched.py",  # requires precomputed *_distances.csv inputs
+    # "run_ecdf_sector_basin_matched.py",
+    "run_water_distance_ecdf_allfeatures.py",  # requires precomputed *_distances.csv inputs
     "run_aqueduct_stress_join_map.py",
     "run_logistic_ai_power_tri.py",
     "run_stalling_nearest_water.py",
