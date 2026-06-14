@@ -20,7 +20,7 @@ SCRIPTS = [
     "run_huc2_facility_share_map.py",
     "run_nwm_hydroregime.py",
     "run_nwm_ecdf_matched_random.py",
-    "run_nwm_recomputed_matched_random.py",
+    "run_nwm_hydroregime_baseline_comparison.py",
     "run_water_stress_siting.py",
 ]
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Recomputed NWM hydro-regime matched-random analysis.
+NWM hydro-regime baseline comparison analysis.
 
 This script evaluates whether AI, power-plant, and TRI-hosting basins
 differ from non-infrastructure basins in NWM-derived hydrologic regime.
@@ -42,7 +42,7 @@ INPUT = (
     / "basin_master_presence_hydro_RECOMPUTED.csv"
 )
 
-OUTDIR = Path(output_folder("nwm_recomputed_matched_random"))
+OUTDIR = Path(output_folder("nwm_hydroregime_baseline_comparison"))
 OUTDIR.mkdir(parents=True, exist_ok=True)
 
 SECTORS = ["AI", "Power", "TRI"]
@@ -254,7 +254,7 @@ def save_effect_table(results: dict[tuple[str, str], dict]) -> pd.DataFrame:
             })
 
     effects = pd.DataFrame(rows)
-    out = OUTDIR / "NWM_recomputed_matched_random_effect_sizes.csv"
+    out = OUTDIR / "NWM_hydroregime_baseline_effect_sizes.csv"
     effects.to_csv(out, index=False)
     print(f"[SAVED] {out}")
 
@@ -283,7 +283,7 @@ def save_verification_table(df: pd.DataFrame, effects: pd.DataFrame) -> None:
     ]
 
     verification = pd.DataFrame(rows)
-    out = OUTDIR / "NWM_recomputed_matched_random_verification.csv"
+    out = OUTDIR / "NWM_hydroregime_baseline_verification.csv"
     verification.to_csv(out, index=False)
     print(f"[SAVED] {out}")
 
@@ -346,7 +346,7 @@ def plot_matched_ecdf(results: dict[tuple[str, str], dict]) -> None:
 
     plt.tight_layout(rect=[0, 0.04, 1, 1])
 
-    out = OUTDIR / "FIG_1_Recomputed_MatchedRandom_ECDF_3x3.png"
+    out = OUTDIR / "FIG_1_NWM_HydroRegime_Baseline_ECDF_3x3.png"
     fig.savefig(out, dpi=400, bbox_inches="tight")
     plt.close(fig)
     print(f"[SAVED] {out}")
@@ -381,7 +381,7 @@ def plot_effect_sizes(effects: pd.DataFrame) -> None:
 
     plt.tight_layout()
 
-    out = OUTDIR / "FIG_2_Recomputed_MatchedRandom_EffectSizes.png"
+    out = OUTDIR / "FIG_2_NWM_HydroRegime_Baseline_EffectSizes.png"
     fig.savefig(out, dpi=400, bbox_inches="tight")
     plt.close(fig)
     print(f"[SAVED] {out}")
@@ -408,7 +408,7 @@ def plot_combined_infrastructure_ecdf(df: pd.DataFrame) -> None:
 
     plt.tight_layout()
 
-    out = OUTDIR / "FIG_3_Recomputed_CombinedInfrastructure_ECDF.png"
+    out = OUTDIR / "FIG_3_NWM_HydroRegime_CombinedInfrastructure_ECDF.png"
     fig.savefig(out, dpi=400, bbox_inches="tight")
     plt.close(fig)
     print(f"[SAVED] {out}")
@@ -419,7 +419,7 @@ def plot_combined_infrastructure_ecdf(df: pd.DataFrame) -> None:
 # =============================================================================
 
 def main() -> None:
-    print("[INFO] Recomputed NWM matched-random analysis")
+    print("[INFO] NWM hydro-regime baseline comparison analysis")
     print(f"[INFO] Input: {INPUT}")
     print(f"[INFO] Output: {OUTDIR}")
 
