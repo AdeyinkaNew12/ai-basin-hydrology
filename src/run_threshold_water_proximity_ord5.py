@@ -31,7 +31,7 @@ from shapely.geometry import Point
 # SERVER PATHS
 # ============================================================
 
-DATA_ROOT = DATA_FOLDERS["water_project"]
+DATA_ROOT = DATA_FOLDERS["base_data"] if "base_data" in DATA_FOLDERS else os.path.dirname(DATA_FOLDERS["water_project"])
 
 PROJECT_DATA_DIR = os.path.join(DATA_ROOT, "WaterProject")
 GROUNDWATER_DIR = os.path.join(DATA_ROOT, "Groundwater")
