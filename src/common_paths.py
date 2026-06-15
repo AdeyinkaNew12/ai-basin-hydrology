@@ -7,9 +7,15 @@ Each analysis script creates its own output subfolder under DEFAULT_BASE_OUTPUT_
 """
 
 import os
+DEFAULT_BASE_DATA_ROOT = os.environ.get(
+    "AI_BASIN_DATA_ROOT",
+    "/mnt/disk3/aoolaseinde/data"
+)
 
-DEFAULT_BASE_DATA_ROOT = "/mnt/disk3/aoolaseinde/data"
-DEFAULT_BASE_OUTPUT_ROOT = "/mnt/disk3/aoolaseinde/projects/integrated_dc_water_pathways/results"
+DEFAULT_BASE_OUTPUT_ROOT = os.environ.get(
+    "AI_BASIN_OUTPUT_ROOT",
+    "/mnt/disk3/aoolaseinde/projects/integrated_dc_water_pathways/results"
+)
 
 # Analysis-specific default data folders.
 # Create these folders on the server and place the required files inside them.

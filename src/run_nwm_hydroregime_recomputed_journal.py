@@ -6,6 +6,7 @@ NWM Hydro-Regime Recompute + Journal Figures
 from __future__ import annotations
 
 import os
+import argparse
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -33,8 +34,19 @@ POWER_FILE = os.path.join(PROJECT_DIR, "Power.xlsx")
 TRI_FILE   = os.path.join(PROJECT_DIR, "TRI_2024.csv")
 BASINS_SHP = os.path.join(PROJECT_DIR, "hybas_na_lev08_v1c.shp")
 
-OUTDIR = output_folder("nwm_hydroregime_full_recomputed")
+OUTDIR = os.path.join(PROJECT_DIR, "NWM_HydroRegime_FULL_RECOMPUTED_JOURNAL")
+
 os.makedirs(OUTDIR, exist_ok=True)
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--recompute",
+    action="store_true",
+    help="Recompute NWM hydrologic metrics from raw Zarr instead of using cached outputs."
+)
+args = parser.parse_args()
+RECOMPUTE_NWM = args.recompute
+
 
 ZARR_PATH = "s3://noaa-nwm-retrospective-3-0-pds/CONUS/zarr/chrtout.zarr"
 
@@ -200,6 +212,7 @@ bm.to_csv(PRES_OUT, index=False)
 print("Saved:", PRES_OUT)
 
 
+
 print("Opening NWM Zarr metadata...")
 
 fs = s3fs.S3FileSystem(anon=True, client_kwargs={"region_name": "us-east-1"})
@@ -312,6 +325,13 @@ BATCH_DIR = os.path.join(OUTDIR, "metric_batches")
 os.makedirs(BATCH_DIR, exist_ok=True)
 
 HYDRO_OUT = os.path.join(OUTDIR, "basin_hydrologic_metrics_RECOMPUTED.csv")
+
+if (not RECOMPUTE_NWM) and os.path.exists(HYDRO_OUT):
+    print(f"Using cached hydrologic metrics: {HYDRO_OUT}")
+    basin_metrics = pd.read_csv(HYDRO_OUT)
+else:
+    print("Opening NWM Zarr metadata...")
+
 
 ds_sub = ds.sel(time=slice(START_DATE, END_DATE))
 
