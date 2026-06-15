@@ -738,7 +738,6 @@ def main() -> None:
         ax.set_xlabel("Number of data centers")
         ax.set_ylabel("Aquifer")
         ax.set_title("Top aquifers by data center count")
-        save_fig(fig, os.path.join(figdir, "top_aquifers_by_dc_count.png"))
         plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(9, 6))
@@ -748,7 +747,6 @@ def main() -> None:
     ax.set_xlabel("Distance to nearest major river (km)")
     ax.set_ylabel("Number of data centers")
     ax.set_title("Distance from data centers to major rivers (ORD_STRA >= 5)")
-    save_fig(fig, os.path.join(figdir, "distance_to_major_river_histogram.png"))
     plt.close(fig)
 
     if "dist_to_reservoir_km" in dc_unique.columns:
@@ -759,7 +757,6 @@ def main() -> None:
         ax.set_xlabel("Distance to nearest reservoir/waterbody (km)")
         ax.set_ylabel("Number of data centers")
         ax.set_title("Distance from data centers to reservoirs/waterbodies")
-        save_fig(fig, os.path.join(figdir, "distance_to_reservoir_histogram.png"))
         plt.close(fig)
 
     report_lines = [
