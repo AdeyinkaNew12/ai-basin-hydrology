@@ -19,7 +19,7 @@ SCRIPTS = [
     "run_threshold_water_proximity_ord5.py",
     "run_water_distance_ecdf_allfeatures.py",
     "run_huc2_facility_share_map.py",
-    "run_nwm_hydroregime_recomputed_journal.py",
+    "run_nwm_hydroregime_journal_figures.py",
     "run_water_stress_siting.py",
 ]
 
