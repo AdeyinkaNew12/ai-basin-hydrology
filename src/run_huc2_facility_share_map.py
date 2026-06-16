@@ -86,19 +86,6 @@ def pick_col(cols, keys):
             return c
     return None
 
-def find_excel_header_row(path, sheet_name=None, max_rows=80):
-    xls = pd.ExcelFile(path)
-    sheets = [sheet_name] if sheet_name else xls.sheet_names
-    for sh in sheets:
-        preview = pd.read_excel(path, sheet_name=sh, header=None, nrows=max_rows)
-        for r in range(len(preview)):
-            row_vals = preview.iloc[r].astype(str).str.lower().tolist()
-            has_lat = any(("latitude" in v) or (v.strip() == "lat") for v in row_vals)
-            has_lon = any(("longitude" in v) or (v.strip() in ["lon","long","lng"]) for v in row_vals)
-            if has_lat and has_lon:
-                return r, sh
-    raise RuntimeError("Could not find Latitude/Longitude header row in Power.xlsx")
-
 def load_points_csv(path, name, force_lat=None, force_lon=None):
     df = pd.read_csv(path, low_memory=False)
     df.columns = df.columns.astype(str).str.strip()
@@ -119,22 +106,29 @@ def load_points_csv(path, name, force_lat=None, force_lon=None):
     return gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df[lon], df[lat]), crs="EPSG:4326")
 
 def load_points_power_excel(path):
-    header_row, sheet_used = find_excel_header_row(path)
-    print(f"✅ Power.xlsx header row={header_row}, sheet='{sheet_used}'")
+    import pandas as pd
+    import geopandas as gpd
 
-    df = pd.read_excel(path, sheet_name=sheet_used, header=header_row)
-    df.columns = df.columns.astype(str).str.strip()
+    # EIA-860 Plant Data:
+    # row 0 = title
+    # row 1 = column headers
+    df = pd.read_excel(path, header=1)
 
-    lat = pick_col(df.columns, ["latitude","lat"])
-    lon = pick_col(df.columns, ["longitude","lon","long","lng"])
-    if lat is None or lon is None:
-        raise RuntimeError(f"Power: could not detect lat/lon. Columns: {df.columns[:80].tolist()}")
+    # Convert coordinates to numeric and discard rows that
+    # do not have valid coordinates.
+    df["Latitude"] = pd.to_numeric(df["Latitude"], errors="coerce")
+    df["Longitude"] = pd.to_numeric(df["Longitude"], errors="coerce")
 
-    df[lat] = pd.to_numeric(df[lat], errors="coerce")
-    df[lon] = pd.to_numeric(df[lon], errors="coerce")
-    df = df.dropna(subset=[lat, lon]).copy()
+    df = df.dropna(subset=["Latitude", "Longitude"])
 
-    return gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df[lon], df[lat]), crs="EPSG:4326")
+    return gpd.GeoDataFrame(
+        df,
+        geometry=gpd.points_from_xy(
+            df["Longitude"],
+            df["Latitude"],
+        ),
+        crs="EPSG:4326",
+    )
 
 def pct_classify(pct_series):
     v = pd.Series(pct_series).astype(float)
