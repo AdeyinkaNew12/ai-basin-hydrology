@@ -119,22 +119,27 @@ def load_points_csv(path, name, force_lat=None, force_lon=None):
     return gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df[lon], df[lat]), crs="EPSG:4326")
 
 def load_points_power_excel(path):
-    header_row, sheet_used = find_excel_header_row(path)
-    print(f"✅ Power.xlsx header row={header_row}, sheet='{sheet_used}'")
+    df = pd.read_excel(
+        path,
+        sheet_name="Plant",
+        header=1
+    )
 
-    df = pd.read_excel(path, sheet_name=sheet_used, header=header_row)
     df.columns = df.columns.astype(str).str.strip()
 
-    lat = pick_col(df.columns, ["latitude","lat"])
-    lon = pick_col(df.columns, ["longitude","lon","long","lng"])
-    if lat is None or lon is None:
-        raise RuntimeError(f"Power: could not detect lat/lon. Columns: {df.columns[:80].tolist()}")
+    lat_col = "Latitude"
+    lon_col = "Longitude"
 
-    df[lat] = pd.to_numeric(df[lat], errors="coerce")
-    df[lon] = pd.to_numeric(df[lon], errors="coerce")
-    df = df.dropna(subset=[lat, lon]).copy()
+    df[lat_col] = pd.to_numeric(df[lat_col], errors="coerce")
+    df[lon_col] = pd.to_numeric(df[lon_col], errors="coerce")
 
-    return gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df[lon], df[lat]), crs="EPSG:4326")
+    df = df.dropna(subset=[lat_col, lon_col]).copy()
+
+    return gpd.GeoDataFrame(
+        df,
+        geometry=gpd.points_from_xy(df[lon_col], df[lat_col]),
+        crs="EPSG:4326"
+    )
 
 def pct_classify(pct_series):
     v = pd.Series(pct_series).astype(float)
