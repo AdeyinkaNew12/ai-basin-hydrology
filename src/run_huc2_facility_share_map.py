@@ -106,12 +106,6 @@ def load_points_csv(path, name, force_lat=None, force_lon=None):
     return gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df[lon], df[lat]), crs="EPSG:4326")
 
 def load_points_power_excel(path):
-    import pandas as pd
-    import geopandas as gpd
-
-    # EIA-860 Plant Data:
-    # row 0 = title
-    # row 1 = column headers
     df = pd.read_excel(path, header=1)
 
     # Convert coordinates to numeric and discard rows that
