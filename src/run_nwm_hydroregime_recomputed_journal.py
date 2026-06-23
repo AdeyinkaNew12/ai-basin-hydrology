@@ -635,7 +635,6 @@ handles1 = [
 ]
 
 fig.legend(handles=handles1, loc="upper center", bbox_to_anchor=(0.5, 0.975), ncol=3, frameon=False)
-fig.text(0.012, 0.965, "a", fontsize=20, fontweight="bold")
 fig.savefig(FIG1, bbox_inches="tight")
 plt.close()
 print("Saved:", FIG1)
@@ -701,7 +700,6 @@ ax.grid(True, axis="x", color=GRAY_GRID, linewidth=0.8)
 ax.grid(False, axis="y")
 ax.legend(frameon=False, ncol=3, loc="upper center", bbox_to_anchor=(0.5, 1.03))
 
-fig2.text(0.03, 0.95, "b", fontsize=20, fontweight="bold")
 fig2.savefig(FIG2, bbox_inches="tight")
 plt.close()
 print("Saved:", FIG2)
@@ -742,7 +740,6 @@ for j, metric in enumerate(METRICS):
 
 handles, labels = axes3[0].get_legend_handles_labels()
 fig3.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 0.955), ncol=4, frameon=False)
-fig3.text(0.012, 0.92, "c", fontsize=20, fontweight="bold")
 fig3.savefig(FIG3, bbox_inches="tight")
 plt.close()
 print("Saved:", FIG3)
