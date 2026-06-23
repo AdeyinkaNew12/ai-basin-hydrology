@@ -80,12 +80,26 @@ def clean_vec(s):
     return v
 
 def load_dist(sec, grp):
-    f = os.path.join(OUT_DIR, f'{sec}_{grp}_distances.csv')
+    prox_dir = os.path.join(DEFAULT_DATA_ROOT, "Water_Proximity_FROM_RAW_BASIN_FILTER_ORD5")
+
+    file_map = {
+        ("AI", "sector"): "data_center_sector_nearest_water_BASIN_FILTER_ORD5.csv",
+        ("AI", "random"): "data_center_random_nearest_water_BASIN_FILTER_ORD5.csv",
+        ("Power", "sector"): "power_plant_sector_nearest_water_BASIN_FILTER_ORD5.csv",
+        ("Power", "random"): "power_plant_random_nearest_water_BASIN_FILTER_ORD5.csv",
+        ("TRI", "sector"): "industry_TRI_sector_nearest_water_BASIN_FILTER_ORD5.csv",
+        ("TRI", "random"): "industry_TRI_random_nearest_water_BASIN_FILTER_ORD5.csv",
+    }
+
+    f = os.path.join(prox_dir, file_map[(sec, grp)])
     if not os.path.exists(f):
         raise FileNotFoundError(f'Missing: {f}')
+
     df = pd.read_csv(f, low_memory=False)
+
     if COL not in df.columns:
         raise KeyError(f"{f} missing '{COL}'. Has: {list(df.columns)[:30]}")
+
     return clean_vec(df[COL])
 
 def cliffs_delta(x, y):
