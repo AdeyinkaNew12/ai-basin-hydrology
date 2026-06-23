@@ -13,7 +13,6 @@ import sys
 from pathlib import Path
 
 SCRIPTS = [
-    "run_integrated_dc_water_pathways.py",
     "run_groundwater_dc_analysis.py",
     "run_major_river_proximity.py",
     "run_threshold_water_proximity_ord5.py",
