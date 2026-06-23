@@ -60,7 +60,7 @@ required_counts = {
     "valid_basins": 11022,
     "none_basins": 6417,
     "infrastructure_basins": 4605,
-    "AI_basins": 345,
+    "AI_basins": 369,
     "Power_basins": 3546,
     "TRI_basins": 3278,
 }

@@ -50,13 +50,13 @@ END_DATE = "2020-12-31"
 ZARR_PATH = "s3://noaa-nwm-retrospective-2-1-zarr-pds/chrtout.zarr"
 
 REACHES_PER_BASIN = 1
-TIME_CHUNK = 30
-FEAT_CHUNK = 25
+TIME_CHUNK = 672
+FEAT_CHUNK = 30000
 MAP_CHUNK = 200000
 
 # Fast mode by default.
 # Set True only if you want to regenerate hydrologic metrics from raw NWM Zarr.
-RECOMPUTE_NWM = False
+RECOMPUTE_NWM = True
 
 
 def find_lat_lon_columns(df):
@@ -288,62 +288,117 @@ else:
     top_reach = feat2bas_sorted.groupby(id_field, as_index=False).head(REACHES_PER_BASIN).copy()
     sel_features = top_reach["feature_id"].astype(np.int64).unique()
 
-    print("\nComputing NWM metrics in feature batches...")
+    print("\nComputing NWM metrics by NWM feature chunks...")
 
-    BATCH_SIZE = 1
+    # The NWM Zarr is physically chunked as streamflow(time=672, feature_id=30000).
+    # Reading one feature still touches a 30,000-feature chunk, so we group features
+    # by their storage chunk and process small groups within each chunk.
+    NWM_FEATURE_CHUNK = 30000
+    FEATURE_GROUP_SIZE = 500
+
+    all_feature_ids = ds["feature_id"].values.astype(np.int64)
+    pos_lookup = pd.Series(np.arange(len(all_feature_ids), dtype=np.int64), index=all_feature_ids)
+
+    selected_df = pd.DataFrame({"feature_id": sel_features.astype(np.int64)})
+    selected_df["pos"] = selected_df["feature_id"].map(pos_lookup)
+    selected_df = selected_df.dropna(subset=["pos"]).copy()
+    selected_df["pos"] = selected_df["pos"].astype(np.int64)
+    selected_df["zchunk"] = selected_df["pos"] // NWM_FEATURE_CHUNK
+
     feat_metric_parts = []
 
-    for i0 in range(0, len(sel_features), BATCH_SIZE):
-        i1 = min(i0 + BATCH_SIZE, len(sel_features))
-        batch_features = sel_features[i0:i1]
+    start_year = pd.Timestamp(START_DATE).year
+    end_year = pd.Timestamp(END_DATE).year
 
-        print(f"  Processing features {i0:,} to {i1:,} of {len(sel_features):,}")
+    for zchunk, zdf in selected_df.groupby("zchunk"):
+        zdf = zdf.sort_values("pos").reset_index(drop=True)
+        print(f"  Processing NWM feature chunk {zchunk:,} with {len(zdf):,} selected reaches", flush=True)
 
-        ds_sub = ds.sel(
-            time=slice(START_DATE, END_DATE),
-            feature_id=batch_features
-        )
+        for g0 in range(0, len(zdf), FEATURE_GROUP_SIZE):
+            g1 = min(g0 + FEATURE_GROUP_SIZE, len(zdf))
+            gdf = zdf.iloc[g0:g1].copy()
 
-        q = ds_sub["streamflow"]
-        q_daily = q.resample(time="1D").mean()
+            positions = gdf["pos"].to_numpy(dtype=np.int64)
+            feature_ids_group = gdf["feature_id"].to_numpy(dtype=np.int64)
 
-        q_mean = q_daily.mean("time")
-        q_std = q_daily.std("time")
-        q_cv = q_std / xr.where(q_mean == 0, np.nan, q_mean)
-        q_q10 = q_daily.quantile(0.10, dim="time").drop_vars("quantile", errors="ignore")
-        q_q90 = q_daily.quantile(0.90, dim="time").drop_vars("quantile", errors="ignore")
+            print(f"    selected reaches {g0:,}..{g1:,} in this chunk", flush=True)
 
-        dq = np.abs(q_daily.diff("time"))
-        rbi = dq.sum("time") / xr.where(q_daily.sum("time") == 0, np.nan, q_daily.sum("time"))
+            daily_arrays = []
+            daily_dates = []
 
-        q_mclim = q_daily.groupby("time.month").mean("time").chunk({"month": -1})
-        top3 = xr.apply_ufunc(
-            lambda x: np.sort(x, axis=-1)[..., -3:].sum(axis=-1),
-            q_mclim,
-            input_core_dims=[["month"]],
-            output_core_dims=[[]],
-            vectorize=False,
-            dask="parallelized",
-            output_dtypes=[float],
-        )
+            try:
+                for year in range(start_year, end_year + 1):
+                    y_start = max(pd.Timestamp(START_DATE), pd.Timestamp(f"{year}-01-01"))
+                    y_end = min(pd.Timestamp(END_DATE), pd.Timestamp(f"{year}-12-31"))
 
-        ann = q_mclim.sum("month")
-        season_conc = top3 / xr.where(ann == 0, np.nan, ann)
+                    q_da = ds["streamflow"].sel(
+                        time=slice(str(y_start.date()), str(y_end.date()))
+                    ).isel(
+                        feature_id=positions
+                    )
 
-        feat_metrics = xr.Dataset({
-            "meanQ": q_mean,
-            "stdQ": q_std,
-            "CVQ": q_cv,
-            "Q10": q_q10,
-            "Q90": q_q90,
-            "RBI": rbi,
-            "season_conc": season_conc
-        })
+                    # Load only this year and this selected feature group
+                    q_hourly = q_da.values.astype(float)
+                    times = pd.to_datetime(q_da["time"].values)
 
-        with ProgressBar():
-            part_df = feat_metrics.compute().to_dataframe().reset_index()
+                    if q_hourly.size == 0:
+                        continue
 
-        feat_metric_parts.append(part_df)
+                    df_hourly = pd.DataFrame(q_hourly, index=times)
+                    df_daily = df_hourly.resample("1D").mean()
+
+                    daily_arrays.append(df_daily.to_numpy(dtype=float))
+                    daily_dates.extend(df_daily.index)
+
+                if not daily_arrays:
+                    continue
+
+                q_daily = np.vstack(daily_arrays)
+                daily_index = pd.DatetimeIndex(daily_dates)
+
+                q_mean = np.nanmean(q_daily, axis=0)
+                q_std = np.nanstd(q_daily, axis=0)
+                q_cv = np.divide(q_std, q_mean, out=np.full_like(q_mean, np.nan), where=q_mean != 0)
+                q_q10 = np.nanquantile(q_daily, 0.10, axis=0)
+                q_q90 = np.nanquantile(q_daily, 0.90, axis=0)
+
+                q_sum = np.nansum(q_daily, axis=0)
+                rbi_num = np.nansum(np.abs(np.diff(q_daily, axis=0)), axis=0)
+                rbi = np.divide(rbi_num, q_sum, out=np.full_like(q_sum, np.nan), where=q_sum != 0)
+
+                season_vals = []
+                months = daily_index.month.to_numpy()
+
+                for j in range(q_daily.shape[1]):
+                    monthly_means = []
+                    for m in range(1, 13):
+                        vals = q_daily[months == m, j]
+                        monthly_means.append(np.nanmean(vals) if vals.size else np.nan)
+
+                    monthly_means = np.array(monthly_means, dtype=float)
+                    ann = np.nansum(monthly_means)
+
+                    if ann == 0 or np.isnan(ann):
+                        season_vals.append(np.nan)
+                    else:
+                        season_vals.append(np.nansum(np.sort(monthly_means)[-3:]) / ann)
+
+                part_df = pd.DataFrame({
+                    "feature_id": feature_ids_group,
+                    "meanQ": q_mean,
+                    "stdQ": q_std,
+                    "CVQ": q_cv,
+                    "Q10": q_q10,
+                    "Q90": q_q90,
+                    "RBI": rbi,
+                    "season_conc": season_vals
+                })
+
+                feat_metric_parts.append(part_df)
+
+            except Exception as e:
+                print(f"      WARNING: failed group {g0:,}..{g1:,} in chunk {zchunk}: {e}", flush=True)
+                continue
 
     feat_metrics_df = pd.concat(feat_metric_parts, ignore_index=True)
 
