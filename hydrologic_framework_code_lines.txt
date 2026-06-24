@@ -1,0 +1,430 @@
+src/common_paths.py:27:    "stalling_nearest_water": os.path.join(DEFAULT_BASE_DATA_ROOT, "StallingNearestWater"),
+src/run_all.py:18:    "run_ecdf_sector_basin_matched.py",
+src/run_ecdf_sector_basin_matched.py:5:This script generates ECDF plots and statistical comparison tables for AI, Power, and TRI facility distances against basin-matched random locations. It produces journal-ready ECDF textfigures, descriptive statistics, KS/Mann-Whitney tests, Cliff’s delta effect sizes, and FDR-adjusted summary tables.
+src/run_ecdf_sector_basin_matched.py:12:- HydroRIVERS_v10_na.shp
+src/run_ecdf_sector_basin_matched.py:18:- default output folder: /mnt/disk3/aoolaseinde/projects/integrated_dc_water_pathways/results/ecdf_sector_basin_matched
+src/run_ecdf_sector_basin_matched.py:28:DEFAULT_OUTPUT_ROOT = output_folder("ecdf_sector_basin_matched")
+src/run_ecdf_sector_basin_matched.py:86:        ("AI", "sector"): "data_center_sector_nearest_water_BASIN_FILTER_ORD5.csv",
+src/run_ecdf_sector_basin_matched.py:87:        ("AI", "random"): "data_center_random_nearest_water_BASIN_FILTER_ORD5.csv",
+src/run_ecdf_sector_basin_matched.py:88:        ("Power", "sector"): "power_plant_sector_nearest_water_BASIN_FILTER_ORD5.csv",
+src/run_ecdf_sector_basin_matched.py:89:        ("Power", "random"): "power_plant_random_nearest_water_BASIN_FILTER_ORD5.csv",
+src/run_ecdf_sector_basin_matched.py:90:        ("TRI", "sector"): "industry_TRI_sector_nearest_water_BASIN_FILTER_ORD5.csv",
+src/run_ecdf_sector_basin_matched.py:91:        ("TRI", "random"): "industry_TRI_random_nearest_water_BASIN_FILTER_ORD5.csv",
+src/run_ecdf_sector_basin_matched.py:203:ax.set_xlabel('Distance to major rivers (km, log scale) — HydroRIVERS ORD_STRA ≥ 5')
+src/run_ecdf_sector_basin_matched.py:206:n_text = 'N matched (in basins):\n' + '\n'.join([f"{sec}: {len(data[sec]['sector']):,}" for sec in SECTORS])
+src/run_groundwater_dc_analysis.py:44:MAJOR_RIVER_ORD_STRA = 5
+src/run_groundwater_dc_analysis.py:182:            if str(c).upper() in ["HUC8", "HUC_8"]:
+src/run_groundwater_dc_analysis.py:191:        raise ValueError(f"Could not identify HUC8 ID column. Columns: {list(huc8.columns)}")
+src/run_groundwater_dc_analysis.py:198:def choose_aquifer_name_col(aquifers):
+src/run_groundwater_dc_analysis.py:199:    candidates = ["aq_name", "aqname", "aquifer", "aquifer_name", "name", "unit_name", "display_name", "principal_aq", "principal_aquifer", "fullname"]
+src/run_groundwater_dc_analysis.py:200:    col = pick_column(aquifers, candidates, required=False)
+src/run_groundwater_dc_analysis.py:203:    for c in aquifers.columns:
+src/run_groundwater_dc_analysis.py:204:        if c != "geometry" and aquifers[c].dtype == "object":
+src/run_groundwater_dc_analysis.py:206:    raise ValueError("Could not identify aquifer name column.")
+src/run_groundwater_dc_analysis.py:229:def nearest_join_points_to_features(points_gdf, features_gdf, feature_cols, distance_col_m):
+src/run_groundwater_dc_analysis.py:232:    joined = gpd.sjoin_nearest(points_gdf, feat, how="left", distance_col=distance_col_m)
+src/run_groundwater_dc_analysis.py:300:    os.path.join(PROJECT_DIR, "WBD_National_GPKG", "WBD_National_GPKG.gpkg"),
+src/run_groundwater_dc_analysis.py:301:    os.path.join(PROJECT_DIR, "WBD_National_GPKG.gpkg"),
+src/run_groundwater_dc_analysis.py:302:    os.path.join(ROOT_DRIVE, "WBD_National_GPKG.gpkg"),
+src/run_groundwater_dc_analysis.py:304:huc8_search = recursive_find(ROOT_DRIVE, ["WBD_National_GPKG.gpkg", "*WBD*.gpkg"])
+src/run_groundwater_dc_analysis.py:307:HUC8_GPKG_PATH = find_first_existing(huc8_candidates, "HUC8 geopackage")
+src/run_groundwater_dc_analysis.py:319:aquifer_candidates = [
+src/run_groundwater_dc_analysis.py:320:    os.path.join(PROJECT_DIR, "Groundwater", "us_aquifers.shp"),
+src/run_groundwater_dc_analysis.py:321:    os.path.join(PROJECT_DIR, "us_aquifers.shp"),
+src/run_groundwater_dc_analysis.py:323:aquifer_search = recursive_find(ROOT_DRIVE, ["*aquifer*.shp", "*Aquifer*.shp", "*principal*aquifer*.shp"])
+src/run_groundwater_dc_analysis.py:324:if aquifer_search:
+src/run_groundwater_dc_analysis.py:325:    aquifer_candidates.insert(0, aquifer_search)
+src/run_groundwater_dc_analysis.py:326:AQUIFER_PATH = find_first_existing(aquifer_candidates, "Aquifer shapefile")
+src/run_groundwater_dc_analysis.py:329:    os.path.join(ROOT_DRIVE, "Copy of HydroRIVERS_v10_na.shp"),
+src/run_groundwater_dc_analysis.py:330:    os.path.join(PROJECT_DIR, "HydroRIVERS_v10_na.shp"),
+src/run_groundwater_dc_analysis.py:331:    os.path.join(PROJECT_DIR, "HydroRIVERS", "HydroRIVERS_v10_na.shp"),
+src/run_groundwater_dc_analysis.py:333:river_search = recursive_find(ROOT_DRIVE, ["*HydroRIVERS*.shp", "*hydrorivers*.shp", "*river*.shp"])
+src/run_groundwater_dc_analysis.py:356:huc8_raw = safe_read_vector(HUC8_GPKG_PATH, "HUC8 watersheds", layer="WBDHU8")
+src/run_groundwater_dc_analysis.py:358:aquifers_raw = safe_read_vector(AQUIFER_PATH, "Aquifers")
+src/run_groundwater_dc_analysis.py:385:# 7. PREP HUC8, COUNTIES, AQUIFERS, RIVERS, RESERVOIRS
+src/run_groundwater_dc_analysis.py:387:huc8 = ensure_crs(clean_geometry(huc8_raw, "HUC8"))
+src/run_groundwater_dc_analysis.py:389:huc8 = huc8[[huc8_id_col, huc8_name_col, "geometry"]].copy().rename(columns={huc8_id_col: "HUC8", huc8_name_col: "HUC8_NAME"})
+src/run_groundwater_dc_analysis.py:390:huc8["HUC8"] = huc8["HUC8"].astype(str).str.zfill(8)
+src/run_groundwater_dc_analysis.py:404:aquifers = ensure_crs(clean_geometry(aquifers_raw, "Aquifers"))
+src/run_groundwater_dc_analysis.py:405:aq_name_col = choose_aquifer_name_col(aquifers)
+src/run_groundwater_dc_analysis.py:406:aquifers = aquifers[[aq_name_col, "geometry"]].copy().rename(columns={aq_name_col: "AQUIFER_NAME"})
+src/run_groundwater_dc_analysis.py:407:aquifers["AQUIFER_NAME"] = aquifers["AQUIFER_NAME"].astype(str).str.strip()
+src/run_groundwater_dc_analysis.py:410:ord_col = pick_column(rivers, ["ORD_STRA", "ord_stra", "strahler", "streamorde", "stream_order"], required=False)
+src/run_groundwater_dc_analysis.py:413:    rivers["ORD_STRA_TMP"] = pd.to_numeric(rivers[ord_col], errors="coerce")
+src/run_groundwater_dc_analysis.py:414:    major_rivers = rivers[rivers["ORD_STRA_TMP"] >= MAJOR_RIVER_ORD_STRA].copy()
+src/run_groundwater_dc_analysis.py:416:    rivers["ORD_STRA_TMP"] = np.nan
+src/run_groundwater_dc_analysis.py:419:major_rivers = major_rivers[["RIVER_NAME", "ORD_STRA_TMP", "geometry"]].copy()
+src/run_groundwater_dc_analysis.py:477:aquifers_p = aquifers.to_crs(TARGET_CRS)
+src/run_groundwater_dc_analysis.py:484:print("\nAssigning data centers to HUC8, counties, and aquifers...")
+src/run_groundwater_dc_analysis.py:485:dc_huc8 = gpd.sjoin(dc_p, huc8_p[["HUC8", "HUC8_NAME", "geometry"]], how="left", predicate="within").drop(columns=["index_right"], errors="ignore")
+src/run_groundwater_dc_analysis.py:486:dc_county = gpd.sjoin(dc_p, counties_p[["FIPS", "COUNTY_NAME", "geometry"]], how="left", predicate="within").drop(columns=["index_right"], errors="ignore")
+src/run_groundwater_dc_analysis.py:487:dc_aquifer = gpd.sjoin(dc_p, aquifers_p[["AQUIFER_NAME", "geometry"]], how="left", predicate="within").drop(columns=["index_right"], errors="ignore")
+src/run_groundwater_dc_analysis.py:488:dc_aquifer_one = dc_aquifer.sort_values(["dc_id", "AQUIFER_NAME"]).drop_duplicates(subset="dc_id", keep="first").copy()
+src/run_groundwater_dc_analysis.py:491:dc_unique = dc_unique.join(dc_huc8[["HUC8", "HUC8_NAME"]], how="left")
+src/run_groundwater_dc_analysis.py:493:dc_unique = dc_unique.join(dc_aquifer_one[["AQUIFER_NAME"]], how="left")
+src/run_groundwater_dc_analysis.py:503:print("\nComputing nearest major-river distances...")
+src/run_groundwater_dc_analysis.py:504:river_nearest = nearest_join_points_to_features(dc_unique[["dc_id", "geometry"]].copy(), major_rivers_p, ["RIVER_NAME", "ORD_STRA_TMP"], "dist_to_major_river_m")
+src/run_groundwater_dc_analysis.py:505:river_nearest = river_nearest.rename(columns={"RIVER_NAME": "NEAREST_MAJOR_RIVER", "ORD_STRA_TMP": "NEAREST_RIVER_ORD_STRA"})
+src/run_groundwater_dc_analysis.py:506:dc_unique = dc_unique.merge(river_nearest.drop(columns="geometry"), on="dc_id", how="left")
+src/run_groundwater_dc_analysis.py:511:    print("\nComputing nearest reservoir/lake distances...")
+src/run_groundwater_dc_analysis.py:512:    reservoir_nearest = nearest_join_points_to_features(dc_unique[["dc_id", "geometry"]].copy(), reservoirs_p, ["RESERVOIR_NAME"], "dist_to_reservoir_m")
+src/run_groundwater_dc_analysis.py:513:    reservoir_nearest = reservoir_nearest.rename(columns={"RESERVOIR_NAME": "NEAREST_RESERVOIR"})
+src/run_groundwater_dc_analysis.py:514:    dc_unique = dc_unique.merge(reservoir_nearest.drop(columns="geometry"), on="dc_id", how="left")
+src/run_groundwater_dc_analysis.py:546:# 13. COUNTY -> HUC8 AREA-WEIGHTED WATER USE
+src/run_groundwater_dc_analysis.py:548:print("\nRunning county-to-HUC8 area-weighted overlay...")
+src/run_groundwater_dc_analysis.py:550:overlay_county_huc8 = gpd.overlay(counties_p, huc8_p[["HUC8", "HUC8_NAME", "geometry"]], how="intersection")
+src/run_groundwater_dc_analysis.py:558:huc8_water = overlay_county_huc8.groupby(["HUC8", "HUC8_NAME"])[weighted_cols].sum().reset_index()
+src/run_groundwater_dc_analysis.py:562:# 14. HUC8 SUMMARY
+src/run_groundwater_dc_analysis.py:564:dc_count_by_huc8 = dc_unique.groupby(["HUC8", "HUC8_NAME"]).size().reset_index(name="dc_count")
+src/run_groundwater_dc_analysis.py:565:huc8_summary = huc8_p[["HUC8", "HUC8_NAME", "geometry"]].drop_duplicates().merge(huc8_water, on=["HUC8", "HUC8_NAME"], how="left").merge(dc_count_by_huc8, on=["HUC8", "HUC8_NAME"], how="left")
+src/run_groundwater_dc_analysis.py:581:huc8_proximity = dc_unique.groupby(["HUC8", "HUC8_NAME"], as_index=False).agg(
+src/run_groundwater_dc_analysis.py:593:huc8_summary = huc8_summary.merge(huc8_proximity, on=["HUC8", "HUC8_NAME"], how="left")
+src/run_groundwater_dc_analysis.py:596:# 15. DOMINANT AQUIFER PER HUC8 AND AQUIFER ENRICHMENT
+src/run_groundwater_dc_analysis.py:598:print("\nCalculating dominant aquifer and aquifer enrichment...")
+src/run_groundwater_dc_analysis.py:599:overlay_aq_huc8 = gpd.overlay(aquifers_p[["AQUIFER_NAME", "geometry"]], huc8_p[["HUC8", "HUC8_NAME", "geometry"]], how="intersection")
+src/run_groundwater_dc_analysis.py:601:huc8_aq_area = overlay_aq_huc8.groupby(["HUC8", "HUC8_NAME", "AQUIFER_NAME"], as_index=False)["aq_area_m2"].sum()
+src/run_groundwater_dc_analysis.py:602:dominant_aquifer_per_huc8 = huc8_aq_area.sort_values(["HUC8", "aq_area_m2"], ascending=[True, False]).groupby("HUC8", as_index=False).first().rename(columns={"AQUIFER_NAME": "DOM_AQUIFER", "aq_area_m2": "DOM_AQUIFER_AREA_M2"})
+src/run_groundwater_dc_analysis.py:603:huc8_summary = huc8_summary.merge(dominant_aquifer_per_huc8[["HUC8", "DOM_AQUIFER", "DOM_AQUIFER_AREA_M2"]], on="HUC8", how="left")
+src/run_groundwater_dc_analysis.py:605:aquifers_p["aq_area_m2"] = aquifers_p.geometry.area
+src/run_groundwater_dc_analysis.py:606:total_aquifer_area = aquifers_p["aq_area_m2"].sum()
+src/run_groundwater_dc_analysis.py:607:aq_area = aquifers_p.groupby("AQUIFER_NAME", as_index=False)["aq_area_m2"].sum()
+src/run_groundwater_dc_analysis.py:608:aq_area["area_fraction"] = aq_area["aq_area_m2"] / total_aquifer_area
+src/run_groundwater_dc_analysis.py:610:dc_total_with_aquifer = dc_aq_counts["observed_dc_count"].sum()
+src/run_groundwater_dc_analysis.py:613:aq_enrichment["observed_dc_fraction"] = np.where(dc_total_with_aquifer > 0, aq_enrichment["observed_dc_count"] / dc_total_with_aquifer, np.nan)
+src/run_groundwater_dc_analysis.py:614:aq_enrichment["expected_dc_count"] = aq_enrichment["area_fraction"] * dc_total_with_aquifer
+src/run_groundwater_dc_analysis.py:618:    n = int(dc_total_with_aquifer)
+src/run_groundwater_dc_analysis.py:645:dc_huc8_aquifer_counts = dc_unique.groupby(["HUC8", "HUC8_NAME", "AQUIFER_NAME"], as_index=False).size().rename(columns={"size": "dc_in_aquifer_count"})
+src/run_groundwater_dc_analysis.py:646:dominant_dc_aquifer_per_huc8 = dc_huc8_aquifer_counts.sort_values(["HUC8", "dc_in_aquifer_count"], ascending=[True, False]).groupby("HUC8", as_index=False).first().rename(columns={"AQUIFER_NAME": "TOP_DC_AQUIFER", "dc_in_aquifer_count": "TOP_DC_AQUIFER_COUNT"})
+src/run_groundwater_dc_analysis.py:647:master_huc8_table = master_huc8_table.merge(dominant_dc_aquifer_per_huc8[["HUC8", "TOP_DC_AQUIFER", "TOP_DC_AQUIFER_COUNT"]], on="HUC8", how="left")
+src/run_groundwater_dc_analysis.py:708:aq_csv = os.path.join(TABLEDIR, "aquifer_enrichment_table.csv")
+src/run_groundwater_dc_analysis.py:775:ax.set_xlabel("Distance to nearest reservoir or lake (km)")
+src/run_groundwater_dc_analysis.py:785:fig3_csv = os.path.join(TABLEDIR, "GroundwaterDC_aquifer_enrichment_ratio.csv")
+src/run_groundwater_dc_analysis.py:794:save_fig(fig, "GroundwaterDC_03_aquifer_enrichment_ratio.png", dpi=400)
+src/run_groundwater_dc_analysis.py:797:# Figure 4: Sector composition in top HUC8 basins
+src/run_groundwater_dc_analysis.py:812:fig4_csv = os.path.join(TABLEDIR, "GroundwaterDC_top_HUC8_sector_composition.csv")
+src/run_groundwater_dc_analysis.py:813:fig4_data[["HUC8", "HUC8_NAME", "dc_count"] + list(available.keys())].to_csv(fig4_csv, index=False)
+src/run_groundwater_dc_analysis.py:825:labels = fig4_data["HUC8_NAME"].astype(str)
+src/run_groundwater_dc_analysis.py:830:ax.set_xlabel("Top HUC8 basins containing AI data centers")
+src/run_groundwater_dc_analysis.py:835:save_fig(fig, "GroundwaterDC_04_sector_composition_top_HUC8_basins.png", dpi=400)
+src/run_groundwater_dc_analysis.py:847:    f.write(f"HUC8s with data centers: {master_huc8_table['has_dc'].sum()}\n")
+src/run_groundwater_dc_analysis.py:848:    f.write(f"HUC8s without data centers: {(~master_huc8_table['has_dc']).sum()}\n")
+src/run_groundwater_dc_figures.py:11:4. Sector composition in top HUC8 basins
+src/run_groundwater_dc_figures.py:125:# Aquifer enrichment may already exist. If not, use aquifer count table.
+src/run_groundwater_dc_figures.py:128:        "aquifer_enrichment_table.csv",
+src/run_groundwater_dc_figures.py:129:        "aquifer_dc_counts.csv",
+src/run_groundwater_dc_figures.py:203:    "nearest_reservoir_lake_km",
+src/run_groundwater_dc_figures.py:215:    ax.set_xlabel("Distance to nearest reservoir or lake (km)")
+src/run_groundwater_dc_figures.py:226:    print("[WARNING] No aquifer table found. Skipping Figure 3.")
+src/run_groundwater_dc_figures.py:230:    aquifer_col = first_existing_column(aq, [
+src/run_groundwater_dc_figures.py:233:        "aquifer",
+src/run_groundwater_dc_figures.py:234:        "aquifer_name",
+src/run_groundwater_dc_figures.py:252:    if aquifer_col is None:
+src/run_groundwater_dc_figures.py:266:            table_name = "GroundwaterDC_aquifer_overrepresentation.csv"
+src/run_groundwater_dc_figures.py:267:            fig_name = "GroundwaterDC_aquifer_overrepresentation.png"
+src/run_groundwater_dc_figures.py:277:            table_name = "GroundwaterDC_top_aquifers_by_dc_count.csv"
+src/run_groundwater_dc_figures.py:278:            fig_name = "GroundwaterDC_top_aquifers_by_dc_count.png"
+src/run_groundwater_dc_figures.py:290:                wrap_labels(aq_plot[aquifer_col], width=34),
+src/run_groundwater_dc_figures.py:301:# Figure 4: Sector composition in top HUC8 basins
+src/run_groundwater_dc_figures.py:306:    "HUC8_NAME",
+src/run_groundwater_dc_figures.py:350:        print("[WARNING] No HUC8 basins with data centers found. Skipping Figure 4.")
+src/run_groundwater_dc_figures.py:353:            os.path.join(TABLE_OUTDIR, "GroundwaterDC_top_HUC8_sector_composition.csv"),
+src/run_groundwater_dc_figures.py:375:        ax.set_xlabel("Top HUC8 basins containing AI data centers")
+src/run_groundwater_dc_figures.py:380:        save_fig(fig, "GroundwaterDC_sector_composition_top_HUC8_basins.png")
+src/run_groundwater_dc_paper_figures.py:12:4. Sector composition in top HUC8 basins
+src/run_groundwater_dc_paper_figures.py:37:AQUIFER_TABLE = os.path.join(TABLEDIR, "aquifer_enrichment_table.csv")
+src/run_groundwater_dc_paper_figures.py:48:print("[INFO] Master HUC8 table:", MASTER_TABLE)
+src/run_groundwater_dc_paper_figures.py:162:    "nearest_reservoir_lake_km",
+src/run_groundwater_dc_paper_figures.py:176:ax.set_xlabel("Distance to nearest reservoir or lake (km)")
+src/run_groundwater_dc_paper_figures.py:191:    "aquifer_name": "Aquifer",
+src/run_groundwater_dc_paper_figures.py:209:# remove broad non-aquifer category if present
+src/run_groundwater_dc_paper_figures.py:217:    os.path.join(TABLE_OUTDIR, "GroundwaterDC_aquifer_enrichment_ratio.csv"),
+src/run_groundwater_dc_paper_figures.py:230:save_fig(fig, "GroundwaterDC_03_aquifer_enrichment_ratio.png")
+src/run_groundwater_dc_paper_figures.py:234:# FIGURE 4: SECTOR COMPOSITION — TOP HUC8 BASINS
+src/run_groundwater_dc_paper_figures.py:237:required = ["HUC8_NAME", "dc_count", "has_dc", "PS_share", "DO_share", "IN_share", "IR_share"]
+src/run_groundwater_dc_paper_figures.py:240:    raise ValueError(f"Master HUC8 table missing columns: {missing}. Columns: {list(master.columns)}")
+src/run_groundwater_dc_paper_figures.py:261:    os.path.join(TABLE_OUTDIR, "GroundwaterDC_top_HUC8_sector_composition.csv"),
+src/run_groundwater_dc_paper_figures.py:276:ax.set_xticklabels(top["HUC8_NAME"].astype(str), rotation=75, ha="right")
+src/run_groundwater_dc_paper_figures.py:278:ax.set_xlabel("Top HUC8 basins containing AI data centers")
+src/run_groundwater_dc_paper_figures.py:283:save_fig(fig, "GroundwaterDC_04_sector_composition_top_HUC8_basins.png")
+src/run_huc2_facility_share_map.py:3:HUC2 Facility Share Choropleth Map
+src/run_huc2_facility_share_map.py:5:This script aggregates AI data centers, power plants, and TRI facilities to HUC2 regions and creates a three-panel choropleth map showing each sector’s share of national facilities by hydrologic region.
+src/run_huc2_facility_share_map.py:11:- WBD_National_GPKG.gpkg
+src/run_huc2_facility_share_map.py:33:print("[INFO] Analysis: HUC2 Facility Share Choropleth Map")
+src/run_huc2_facility_share_map.py:52:HUC_FILE     = os.path.join(PROJECT_DIR, "WBD_National_GPKG", "WBD_National_GPKG.gpkg")
+src/run_huc2_facility_share_map.py:54:OUT_FIG = os.path.join(DEFAULT_OUTPUT_ROOT, 'HUC2_FacilitySharePct_3panel_AI_Power_TRI_BBOXLABELS.png')
+src/run_huc2_facility_share_map.py:150:def make_huc2_pct_map(points_gdf, huc2_gdf, HUC2_ID):
+src/run_huc2_facility_share_map.py:151:    j = gpd.sjoin(points_gdf, huc2_gdf[[HUC2_ID, "geometry"]], how="inner", predicate="within")
+src/run_huc2_facility_share_map.py:152:    counts = j.groupby(HUC2_ID).size().rename("count").reset_index()
+src/run_huc2_facility_share_map.py:154:    m = huc2_gdf[[HUC2_ID, "geometry"]].merge(counts, on=HUC2_ID, how="left")
+src/run_huc2_facility_share_map.py:242:if "WBDHU2" not in layers:
+src/run_huc2_facility_share_map.py:243:    raise RuntimeError(f"WBDHU2 not found. Layers: {layers}")
+src/run_huc2_facility_share_map.py:245:huc2 = gpd.read_file(HUC_FILE, layer="WBDHU2")
+src/run_huc2_facility_share_map.py:246:HUC2_ID = pick_col(huc2.columns, ["huc2"])
+src/run_huc2_facility_share_map.py:247:if HUC2_ID is None:
+src/run_huc2_facility_share_map.py:248:    raise RuntimeError(f"Could not find HUC2 id field. Columns: {huc2.columns.tolist()}")
+src/run_huc2_facility_share_map.py:250:huc2[HUC2_ID] = huc2[HUC2_ID].astype(str).str.zfill(2)
+src/run_huc2_facility_share_map.py:251:huc2 = huc2[~huc2[HUC2_ID].isin(["19","20","21","22"])].copy()
+src/run_huc2_facility_share_map.py:260:m_ai,  tot_ai  = make_huc2_pct_map(ai,  huc2, HUC2_ID)
+src/run_huc2_facility_share_map.py:261:m_pwr, tot_pwr = make_huc2_pct_map(pwr, huc2, HUC2_ID)
+src/run_huc2_facility_share_map.py:262:m_tri, tot_tri = make_huc2_pct_map(tri, huc2, HUC2_ID)
+src/run_integrated_dc_water_pathways.py:6:This script links U.S. data center point locations to HUC8 watersheds,
+src/run_integrated_dc_water_pathways.py:7:counties, aquifers, major rivers, and HydroLAKES waterbodies, then combines
+src/run_integrated_dc_water_pathways.py:14:- requires HydroRIVERS sidecars
+src/run_integrated_dc_water_pathways.py:15:- uses major rivers defined as ORD_STRA >= 5
+src/run_integrated_dc_water_pathways.py:44:MAJOR_RIVER_ORD_STRA = 5
+src/run_integrated_dc_water_pathways.py:56:    aquifer: str
+src/run_integrated_dc_water_pathways.py:197:        return safe_read_vector(path, label="HUC8 watersheds", layer="WBDHU8"), "WBD"
+src/run_integrated_dc_water_pathways.py:199:        verify_shapefile_sidecars(path, label="HydroBASINS Level 8")
+src/run_integrated_dc_water_pathways.py:200:        return safe_read_vector(path, label="HydroBASINS Level 8"), "HYBAS"
+src/run_integrated_dc_water_pathways.py:201:    raise ValueError(f"Unsupported HUC8 dataset path: {path}")
+src/run_integrated_dc_water_pathways.py:207:    if source_type == "WBD":
+src/run_integrated_dc_water_pathways.py:213:                if str(col).upper() in {"HUC8", "HUC_8"}:
+src/run_integrated_dc_water_pathways.py:223:            raise ValueError(f"Could not identify WBD HUC8 column. Columns: {list(huc8.columns)}")
+src/run_integrated_dc_water_pathways.py:225:            huc8["HUC8_NAME_TMP"] = huc8[huc8_id_col].astype(str)
+src/run_integrated_dc_water_pathways.py:226:            huc8_name_col = "HUC8_NAME_TMP"
+src/run_integrated_dc_water_pathways.py:229:        huc8 = huc8.rename(columns={huc8_id_col: "HUC8", huc8_name_col: "HUC8_NAME"})
+src/run_integrated_dc_water_pathways.py:230:        huc8["HUC8"] = huc8["HUC8"].astype(str).str.zfill(8)
+src/run_integrated_dc_water_pathways.py:231:        huc8["HUC8_NAME"] = huc8["HUC8_NAME"].astype(str)
+src/run_integrated_dc_water_pathways.py:244:        huc8["HUC8"] = huc8[hybas_id_col].astype(str)
+src/run_integrated_dc_water_pathways.py:245:        huc8["HUC8_NAME"] = huc8["HUC8"]
+src/run_integrated_dc_water_pathways.py:246:        return huc8[["HUC8", "HUC8_NAME", "geometry"]].copy()
+src/run_integrated_dc_water_pathways.py:269:def choose_aquifer_name_col(aquifers: gpd.GeoDataFrame) -> str:
+src/run_integrated_dc_water_pathways.py:271:        "aq_name", "aqname", "aquifer", "aquifer_name", "name", "unit_name",
+src/run_integrated_dc_water_pathways.py:272:        "display_name", "principal_aq", "principal_aquifer", "fullname"
+src/run_integrated_dc_water_pathways.py:274:    col = pick_column(aquifers, candidates, required=False)
+src/run_integrated_dc_water_pathways.py:277:    for col in aquifers.columns:
+src/run_integrated_dc_water_pathways.py:278:        if col != "geometry" and aquifers[col].dtype == "object":
+src/run_integrated_dc_water_pathways.py:280:    raise ValueError("Could not identify aquifer name column.")
+src/run_integrated_dc_water_pathways.py:315:def nearest_join_points_to_features(
+src/run_integrated_dc_water_pathways.py:323:    joined = gpd.sjoin_nearest(points_gdf, feat, how="left", distance_col=distance_col_m)
+src/run_integrated_dc_water_pathways.py:387:            os.path.join(data_root, "WBD_National_GPKG.gpkg"),
+src/run_integrated_dc_water_pathways.py:388:            os.path.join(data_root, "WBD_National_GPKG", "WBD_National_GPKG.gpkg"),
+src/run_integrated_dc_water_pathways.py:391:        search_patterns=["WBD_National_GPKG.gpkg", "*WBD*.gpkg", "hybas_na_lev08_v1c.shp", "*lev08*.shp"],
+src/run_integrated_dc_water_pathways.py:392:        label="HUC8 dataset",
+src/run_integrated_dc_water_pathways.py:404:    aquifer_path = find_file_smart(
+src/run_integrated_dc_water_pathways.py:406:        exact_candidates=[os.path.join(data_root, "us_aquifers.shp")],
+src/run_integrated_dc_water_pathways.py:407:        search_patterns=["us_aquifers.shp", "*aquifer*.shp", "*Aquifer*.shp", "*principal*aquifer*.shp"],
+src/run_integrated_dc_water_pathways.py:414:        exact_candidates=[os.path.join(data_root, "HydroRIVERS_v10_na.shp")],
+src/run_integrated_dc_water_pathways.py:415:        search_patterns=["HydroRIVERS_v10_na.shp", "*HydroRIVERS*.shp", "*hydrorivers*.shp"],
+src/run_integrated_dc_water_pathways.py:437:        aquifer=aquifer_path,
+src/run_integrated_dc_water_pathways.py:456:    verify_shapefile_sidecars(paths.river, label="HydroRIVERS")
+src/run_integrated_dc_water_pathways.py:458:    verify_shapefile_sidecars(paths.aquifer, label="Aquifer shapefile")
+src/run_integrated_dc_water_pathways.py:465:    print("HUC8_PATH      :", paths.huc8)
+src/run_integrated_dc_water_pathways.py:467:    print("AQUIFER_PATH   :", paths.aquifer)
+src/run_integrated_dc_water_pathways.py:480:    aquifers_raw = safe_read_vector(paths.aquifer, "Aquifers")
+src/run_integrated_dc_water_pathways.py:505:    huc8 = standardize_huc8(ensure_crs(clean_geometry(huc8_raw, "HUC8")), huc_source_type)
+src/run_integrated_dc_water_pathways.py:521:    aquifers = ensure_crs(clean_geometry(aquifers_raw, "Aquifers"))
+src/run_integrated_dc_water_pathways.py:522:    aq_name_col = choose_aquifer_name_col(aquifers)
+src/run_integrated_dc_water_pathways.py:523:    aquifers = aquifers[[aq_name_col, "geometry"]].copy().rename(columns={aq_name_col: "AQUIFER_NAME"})
+src/run_integrated_dc_water_pathways.py:524:    aquifers["AQUIFER_NAME"] = aquifers["AQUIFER_NAME"].astype(str).str.strip()
+src/run_integrated_dc_water_pathways.py:527:    ord_col = pick_column(rivers, ["ORD_STRA", "ord_stra", "strahler", "streamorde", "stream_order"], required=False)
+src/run_integrated_dc_water_pathways.py:532:            "ORD_STRA column not found in HydroRIVERS attributes. "
+src/run_integrated_dc_water_pathways.py:536:    rivers["ORD_STRA_TMP"] = pd.to_numeric(rivers[ord_col], errors="coerce")
+src/run_integrated_dc_water_pathways.py:537:    major_rivers = rivers[rivers["ORD_STRA_TMP"] >= MAJOR_RIVER_ORD_STRA].copy()
+src/run_integrated_dc_water_pathways.py:539:    major_rivers = major_rivers[["RIVER_NAME", "ORD_STRA_TMP", "geometry"]].copy()
+src/run_integrated_dc_water_pathways.py:540:    print(f"[INFO] Using Strahler order >= {MAJOR_RIVER_ORD_STRA} for major rivers")
+src/run_integrated_dc_water_pathways.py:606:    aquifers_p = aquifers.to_crs(args.target_crs)
+src/run_integrated_dc_water_pathways.py:610:    print("Assigning data centers to HUC8s, counties, and aquifers...")
+src/run_integrated_dc_water_pathways.py:611:    dc_huc8 = gpd.sjoin(dc_p, huc8_p[["HUC8", "HUC8_NAME", "geometry"]], how="left", predicate="within").drop(columns=["index_right"], errors="ignore")
+src/run_integrated_dc_water_pathways.py:612:    dc_county = gpd.sjoin(dc_p, counties_p[["FIPS", "COUNTY_NAME", "geometry"]], how="left", predicate="within").drop(columns=["index_right"], errors="ignore")
+src/run_integrated_dc_water_pathways.py:613:    dc_aquifer = gpd.sjoin(dc_p, aquifers_p[["AQUIFER_NAME", "geometry"]], how="left", predicate="within").drop(columns=["index_right"], errors="ignore")
+src/run_integrated_dc_water_pathways.py:614:    dc_aquifer_one = dc_aquifer.sort_values(["dc_id", "AQUIFER_NAME"]).drop_duplicates(subset="dc_id", keep="first").copy()
+src/run_integrated_dc_water_pathways.py:619:    dc_joined = dc_joined.merge(dc_aquifer_one.drop(columns="geometry"), left_index=True, right_index=True, how="left", suffixes=("", "_aquifer"))
+src/run_integrated_dc_water_pathways.py:625:    print("Computing nearest major-river distances...")
+src/run_integrated_dc_water_pathways.py:626:    river_nearest = nearest_join_points_to_features(
+src/run_integrated_dc_water_pathways.py:629:        feature_cols=["RIVER_NAME", "ORD_STRA_TMP"],
+src/run_integrated_dc_water_pathways.py:631:    ).rename(columns={"RIVER_NAME": "NEAREST_MAJOR_RIVER", "ORD_STRA_TMP": "NEAREST_RIVER_ORD_STRA"})
+src/run_integrated_dc_water_pathways.py:632:    dc_unique = dc_unique.merge(river_nearest.drop(columns="geometry"), on="dc_id", how="left")
+src/run_integrated_dc_water_pathways.py:637:        print("Computing nearest reservoir distances...")
+src/run_integrated_dc_water_pathways.py:638:        reservoir_nearest = nearest_join_points_to_features(
+src/run_integrated_dc_water_pathways.py:644:        dc_unique = dc_unique.merge(reservoir_nearest.drop(columns="geometry"), on="dc_id", how="left")
+src/run_integrated_dc_water_pathways.py:703:    huc8_dc_counts = dc_unique.groupby(["HUC8", "HUC8_NAME"], dropna=False).size().reset_index(name="dc_count")
+src/run_integrated_dc_water_pathways.py:706:    aquifer_counts = (
+src/run_integrated_dc_water_pathways.py:713:    aquifer_counts.to_csv(os.path.join(tabledir, "aquifer_dc_counts.csv"), index=False)
+src/run_integrated_dc_water_pathways.py:726:        "n_huc8_with_dc": int(dc_unique["HUC8"].dropna().nunique()),
+src/run_integrated_dc_water_pathways.py:728:        "n_aquifers_with_dc": int(dc_unique["AQUIFER_NAME"].dropna().nunique()),
+src/run_integrated_dc_water_pathways.py:734:    if len(aquifer_counts) > 0:
+src/run_integrated_dc_water_pathways.py:736:        plot_df = aquifer_counts.head(15).iloc[::-1]
+src/run_integrated_dc_water_pathways.py:740:        ax.set_title("Top aquifers by data center count")
+src/run_integrated_dc_water_pathways.py:747:    ax.set_xlabel("Distance to nearest major river (km)")
+src/run_integrated_dc_water_pathways.py:749:    ax.set_title("Distance from data centers to major rivers (ORD_STRA >= 5)")
+src/run_integrated_dc_water_pathways.py:757:        ax.set_xlabel("Distance to nearest reservoir/waterbody (km)")
+src/run_integrated_dc_water_pathways.py:766:        f"HUC8 basins hosting data centers: {summary['n_huc8_with_dc']}",
+src/run_integrated_dc_water_pathways.py:768:        f"Aquifers hosting data centers: {summary['n_aquifers_with_dc']}",
+src/run_integrated_dc_water_pathways.py:769:        f"Share within 10 km of major rivers (ORD_STRA >= 5): {summary['share_within_10km_major_river']:.3f}" if pd.notna(summary['share_within_10km_major_river']) else "Share within 10 km of major rivers (ORD_STRA >= 5): NA",
+src/run_integrated_dc_water_pathways.py:772:        "Top aquifers by data center count:",
+src/run_integrated_dc_water_pathways.py:774:    if len(aquifer_counts) > 0:
+src/run_integrated_dc_water_pathways.py:775:        for _, row in aquifer_counts.head(10).iterrows():
+src/run_integrated_dc_water_pathways.py:778:        report_lines.append("- No aquifer assignments available.")
+src/run_major_river_proximity.py:6:are located closer to major river corridors than expected under basin-matched
+src/run_major_river_proximity.py:9:The analysis uses HydroRIVERS Strahler stream order to identify major rivers
+src/run_major_river_proximity.py:10:and computes nearest-river distances for observed facilities and matched random
+src/run_major_river_proximity.py:11:points generated within HydroBASINS watershed boundaries.
+src/run_major_river_proximity.py:46:RIVERS_SHP = os.path.join(DEFAULT_DATA_ROOT, "HydroRIVERS_v10_na.shp")
+src/run_major_river_proximity.py:50:    "MajorRiverProximity_ORD_STRA_within10km_AI_Power_TRI.png",
+src/run_major_river_proximity.py:54:    "MajorRiverProximity_summary_ORD_STRA.csv",
+src/run_major_river_proximity.py:58:ORD_COL = "ORD_STRA"
+src/run_major_river_proximity.py:126:def generate_random_points_in_basins(bas_gdf, n, seed=0, batch=25000):
+src/run_major_river_proximity.py:144:        joined = gpd.sjoin(
+src/run_major_river_proximity.py:243:def nearest_dist_km(points_geoseries, tree, river_geoms, chunk=20000):
+src/run_major_river_proximity.py:249:        nearest = tree.nearest(pts)
+src/run_major_river_proximity.py:251:        if len(nearest) > 0 and isinstance(nearest[0], (int, np.integer)):
+src/run_major_river_proximity.py:252:            nearest_geoms = [river_geoms[i] for i in nearest]
+src/run_major_river_proximity.py:254:            nearest_geoms = nearest
+src/run_major_river_proximity.py:256:        for i, (point, geom) in enumerate(zip(pts, nearest_geoms)):
+src/run_major_river_proximity.py:272:    mark("Loading basins")
+src/run_major_river_proximity.py:279:    mark("Loading HydroRIVERS")
+src/run_major_river_proximity.py:284:        raise RuntimeError(f"Expected {ORD_COL} in HydroRIVERS. Columns: {list(rivers.columns)}")
+src/run_major_river_proximity.py:291:    print(f"[INFO] HydroRIVERS segments: {len(rivers):,}")
+src/run_major_river_proximity.py:334:        mark(f"{sector}: spatial join to basins")
+src/run_major_river_proximity.py:336:        joined = gpd.sjoin(g_in, bas[["geometry"]], how="inner", predicate="within")
+src/run_major_river_proximity.py:341:            print(f"[WARN] {sector}: 0 points inside basins; skipping.")
+src/run_major_river_proximity.py:345:        rd = generate_random_points_in_basins(
+src/run_major_river_proximity.py:355:        mark(f"{sector}: computing nearest distances")
+src/run_major_river_proximity.py:356:        g_in["dist_river_km"] = nearest_dist_km(g_in_proj.geometry, tree, river_geoms)
+src/run_major_river_proximity.py:357:        rd["dist_river_km"] = nearest_dist_km(rd_proj.geometry, tree, river_geoms)
+src/run_major_river_proximity.py:562:        f"Proximity to major rivers HydroRIVERS {ORD_COL} >= {STREAM_ORDER_MIN}\n"
+src/run_nwm_ecdf_matched_random.py:5:This script reads the basin-level hydro-regime master table and generates ECDF plots plus matched-random comparison statistics for NWM-derived hydrologic metrics.
+src/run_nwm_ecdf_matched_random.py:8:- basin_master_presence_hydro_manual.csv
+src/run_nwm_ecdf_matched_random.py:45:INFILE = os.path.join(DEFAULT_DATA_ROOT, 'basin_master_presence_hydro_manual.csv')
+src/run_nwm_hydroregime_baseline_comparison.py:5:This script evaluates whether AI, power-plant, and TRI-hosting basins
+src/run_nwm_hydroregime_baseline_comparison.py:6:differ from non-infrastructure basins in NWM-derived hydrologic regime.
+src/run_nwm_hydroregime_baseline_comparison.py:9:- Uses the recomputed basin-level NWM hydro-regime table.
+src/run_nwm_hydroregime_baseline_comparison.py:10:- Retains only basins with valid hydrologic metrics.
+src/run_nwm_hydroregime_baseline_comparison.py:12:- Defines the baseline pool as basins with no AI, Power, or TRI facilities.
+src/run_nwm_hydroregime_baseline_comparison.py:42:    / "basin_master_presence_hydro_RECOMPUTED.csv"
+src/run_nwm_hydroregime_baseline_comparison.py:266:        {"check": "valid_hydrologic_basins", "value": len(df)},
+src/run_nwm_hydroregime_baseline_comparison.py:267:        {"check": "none_basins", "value": int(df["None_present"].sum())},
+src/run_nwm_hydroregime_baseline_comparison.py:268:        {"check": "any_infrastructure_basins", "value": int(df["Infrastructure_present"].sum())},
+src/run_nwm_hydroregime_baseline_comparison.py:269:        {"check": "AI_basins", "value": int(df["AI_present"].sum())},
+src/run_nwm_hydroregime_baseline_comparison.py:270:        {"check": "Power_basins", "value": int(df["Power_present"].sum())},
+src/run_nwm_hydroregime_baseline_comparison.py:271:        {"check": "TRI_basins", "value": int(df["TRI_present"].sum())},
+src/run_nwm_hydroregime_baseline_comparison.py:434:    print(f"Valid basins: {len(df):,}")
+src/run_nwm_hydroregime_baseline_comparison.py:441:    analysis_table = OUTDIR / "basin_hydrologic_metrics_valid.csv"
+src/run_nwm_hydroregime_journal_figures.py:23:MASTER = DATA_DIR / "basin_master_presence_hydro_RECOMPUTED.csv"
+src/run_nwm_hydroregime_journal_figures.py:33:    "basin_master_presence_hydro_RECOMPUTED.csv",
+src/run_nwm_hydroregime_journal_figures.py:34:    "basin_hydrologic_metrics_RECOMPUTED.csv",
+src/run_nwm_hydroregime_journal_figures.py:60:    "valid_basins": 11022,
+src/run_nwm_hydroregime_journal_figures.py:61:    "none_basins": 6417,
+src/run_nwm_hydroregime_journal_figures.py:62:    "infrastructure_basins": 4605,
+src/run_nwm_hydroregime_journal_figures.py:63:    "AI_basins": 369,
+src/run_nwm_hydroregime_journal_figures.py:64:    "Power_basins": 3546,
+src/run_nwm_hydroregime_journal_figures.py:65:    "TRI_basins": 3278,
+src/run_nwm_hydroregime_journal_figures.py:69:    "valid_basins": len(df),
+src/run_nwm_hydroregime_journal_figures.py:70:    "none_basins": int((df["group_excl"] == "None").sum()),
+src/run_nwm_hydroregime_journal_figures.py:71:    "infrastructure_basins": int((df["group_excl"] == "Infrastructure").sum()),
+src/run_nwm_hydroregime_journal_figures.py:72:    "AI_basins": int(df["AI_present"].sum()),
+src/run_nwm_hydroregime_journal_figures.py:73:    "Power_basins": int(df["Power_present"].sum()),
+src/run_nwm_hydroregime_journal_figures.py:74:    "TRI_basins": int(df["TRI_present"].sum()),
+src/run_nwm_hydroregime.py:46:HYDRO_OUT = os.path.join(OUTDIR, "basin_hydrologic_metrics.csv")
+src/run_nwm_hydroregime.py:136:def assign_basins(points_gdf, basins_gdf, basin_id_field):
+src/run_nwm_hydroregime.py:137:    j = gpd.sjoin(
+src/run_nwm_hydroregime.py:139:        basins_gdf[[basin_id_field, "geometry"]],
+src/run_nwm_hydroregime.py:178:    raise ValueError("Could not find HYBAS_ID in basins.")
+src/run_nwm_hydroregime.py:186:ai_gdf = assign_basins(ai_gdf, bas, id_field).dropna(subset=[id_field]).copy()
+src/run_nwm_hydroregime.py:187:tri_gdf = assign_basins(tri_gdf, bas, id_field).dropna(subset=[id_field]).copy()
+src/run_nwm_hydroregime.py:188:power_gdf = assign_basins(power_gdf, bas, id_field).dropna(subset=[id_field]).copy()
+src/run_nwm_hydroregime.py:195:def basin_presence_counts(gdf, basin_id_field, prefix):
+src/run_nwm_hydroregime.py:196:    out = gdf.groupby(basin_id_field).size().rename(f"n_{prefix}").to_frame().reset_index()
+src/run_nwm_hydroregime.py:201:ai_b = basin_presence_counts(ai_gdf, id_field, "AI")
+src/run_nwm_hydroregime.py:202:pw_b = basin_presence_counts(power_gdf, id_field, "Power")
+src/run_nwm_hydroregime.py:203:tr_b = basin_presence_counts(tri_gdf, id_field, "TRI")
+src/run_nwm_hydroregime.py:222:PRES_OUT = os.path.join(OUTDIR, "basin_presence_counts.csv")
+src/run_nwm_hydroregime.py:252:    MAP_FILE = os.path.join(OUTDIR, "feature_to_basin.parquet")
+src/run_nwm_hydroregime.py:255:        print("\nLoading cached reach->basin map:", MAP_FILE)
+src/run_nwm_hydroregime.py:258:        print("\nBuilding reach->basin map (ONE-TIME heavy step)...")
+src/run_nwm_hydroregime.py:277:            j = gpd.sjoin(pts, bas[[id_field, "geometry"]], how="left", predicate="within")
+src/run_nwm_hydroregime.py:450:MASTER_OUT = os.path.join(OUTDIR, "basin_master_presence_hydro.csv")
+src/run_nwm_hydroregime.py:458:    "AI basins": master.loc[master["AI_present"] == 1],
+src/run_nwm_hydroregime.py:459:    "Non-AI basins": master.loc[master["AI_present"] == 0],
+src/run_nwm_hydroregime.py:460:    "Power basins": master.loc[master["Power_present"] == 1],
+src/run_nwm_hydroregime.py:461:    "TRI basins": master.loc[master["TRI_present"] == 1],
+src/run_nwm_hydroregime.py:536:        ax.set_title("Hydrologic regime ECDF by basin class (NWM v3.0 retrospective)")
+src/run_nwm_hydroregime_recomputed_journal.py:163:    raise ValueError("HYBAS_ID missing from HydroBASINS file.")
+src/run_nwm_hydroregime_recomputed_journal.py:172:def assign_basins(points_gdf, basins_gdf):
+src/run_nwm_hydroregime_recomputed_journal.py:173:    joined = gpd.sjoin(
+src/run_nwm_hydroregime_recomputed_journal.py:175:        basins_gdf[[id_field, "geometry"]],
+src/run_nwm_hydroregime_recomputed_journal.py:184:ai_gdf = assign_basins(ai_gdf, bas)
+src/run_nwm_hydroregime_recomputed_journal.py:185:power_gdf = assign_basins(power_gdf, bas)
+src/run_nwm_hydroregime_recomputed_journal.py:186:tri_gdf = assign_basins(tri_gdf, bas)
+src/run_nwm_hydroregime_recomputed_journal.py:189:def basin_presence_counts(gdf, prefix):
+src/run_nwm_hydroregime_recomputed_journal.py:195:ai_b = basin_presence_counts(ai_gdf, "AI")
+src/run_nwm_hydroregime_recomputed_journal.py:196:pw_b = basin_presence_counts(power_gdf, "Power")
+src/run_nwm_hydroregime_recomputed_journal.py:197:tr_b = basin_presence_counts(tri_gdf, "TRI")
+src/run_nwm_hydroregime_recomputed_journal.py:210:PRES_OUT = os.path.join(OUTDIR, "basin_presence_counts_RECOMPUTED.csv")
+src/run_nwm_hydroregime_recomputed_journal.py:243:MAP_FILE = os.path.join(OUTDIR, "feature_to_basin_RECOMPUTED.parquet")
+src/run_nwm_hydroregime_recomputed_journal.py:246:    print("Loading cached feature-to-basin map:", MAP_FILE)
+src/run_nwm_hydroregime_recomputed_journal.py:249:    print("Building feature-to-basin map from NWM reach coordinates and HydroBASINS...")
+src/run_nwm_hydroregime_recomputed_journal.py:278:        j = gpd.sjoin(
+src/run_nwm_hydroregime_recomputed_journal.py:310:selected_csv = os.path.join(OUTDIR, "selected_reach_per_basin_RECOMPUTED.csv")
+src/run_nwm_hydroregime_recomputed_journal.py:327:HYDRO_OUT = os.path.join(OUTDIR, "basin_hydrologic_metrics_RECOMPUTED.csv")
+src/run_nwm_hydroregime_recomputed_journal.py:331:    basin_metrics = pd.read_csv(HYDRO_OUT)
+src/run_nwm_hydroregime_recomputed_journal.py:475:MASTER_OUT = os.path.join(OUTDIR, "basin_master_presence_hydro_RECOMPUTED.csv")
+src/run_nwm_hydroregime_recomputed_journal.py:481:print("Valid basins:", len(df))
+src/run_nwm_hydroregime_recomputed_journal.py:632:    Line2D([0], [0], color=BLACKISH, lw=2.8, label="Sector basin"),
+src/run_threshold_water_proximity_ord5.py:8:3. Filter facilities to the HydroBASINS HUC8 study domain
+src/run_threshold_water_proximity_ord5.py:9:4. Restrict HydroRIVERS to major rivers using ORD_STRA >= 5
+src/run_threshold_water_proximity_ord5.py:10:5. Generate basin-matched random baselines
+src/run_threshold_water_proximity_ord5.py:11:6. Compute nearest distance to major rivers, lakes, and coast
+src/run_threshold_water_proximity_ord5.py:137:def add_nearest_distance(points_gdf, target_gdf, colname):
+src/run_threshold_water_proximity_ord5.py:138:    joined = gpd.sjoin_nearest(
+src/run_threshold_water_proximity_ord5.py:162:def make_random_points_matched(facility_gdf, basin_gdf, seed=RANDOM_SEED):
+src/run_threshold_water_proximity_ord5.py:165:    joined = gpd.sjoin(
+src/run_threshold_water_proximity_ord5.py:167:        basin_gdf[["geometry"]],
+src/run_threshold_water_proximity_ord5.py:177:        basin_index = row.get("index_right")
+src/run_threshold_water_proximity_ord5.py:180:        if pd.isna(basin_index):
+src/run_threshold_water_proximity_ord5.py:183:        poly = basin_gdf.loc[basin_index, "geometry"]
+src/run_threshold_water_proximity_ord5.py:235:    basins_shp = find_file("hybas_na_lev08_v1c.shp")
+src/run_threshold_water_proximity_ord5.py:236:    rivers_shp = find_file("HydroRIVERS_v10_na.shp")
+src/run_threshold_water_proximity_ord5.py:286:    print("\nValid-coordinate facilities before basin filter:", flush=True)
+src/run_threshold_water_proximity_ord5.py:293:    mark("Loading basins and hydrographic layers...")
+src/run_threshold_water_proximity_ord5.py:295:    basins = read_and_project(basins_shp)
+src/run_threshold_water_proximity_ord5.py:301:    print("Basins:", len(basins), flush=True)
+src/run_threshold_water_proximity_ord5.py:307:    # Filter facilities to HydroBASINS domain
+src/run_threshold_water_proximity_ord5.py:309:    mark("Filtering facilities to HydroBASINS domain...")
+src/run_threshold_water_proximity_ord5.py:314:        joined = gpd.sjoin(
+src/run_threshold_water_proximity_ord5.py:316:            basins[["geometry"]],
+src/run_threshold_water_proximity_ord5.py:329:    print("\nFacilities inside HydroBASINS domain:", flush=True)
+src/run_threshold_water_proximity_ord5.py:336:    mark("Filtering HydroRIVERS to major reaches...")
+src/run_threshold_water_proximity_ord5.py:338:    if "ORD_STRA" not in rivers.columns:
+src/run_threshold_water_proximity_ord5.py:339:        raise ValueError("ORD_STRA column not found in HydroRIVERS.")
+src/run_threshold_water_proximity_ord5.py:341:    rivers["ORD_STRA"] = pd.to_numeric(rivers["ORD_STRA"], errors="coerce")
+src/run_threshold_water_proximity_ord5.py:342:    rivers = rivers[rivers["ORD_STRA"] >= ORD_MIN].copy()
+src/run_threshold_water_proximity_ord5.py:344:    print(f"\nUsing major rivers only: ORD_STRA >= {ORD_MIN}", flush=True)
+src/run_threshold_water_proximity_ord5.py:348:    print("Basins:", len(basins), flush=True)
+src/run_threshold_water_proximity_ord5.py:349:    print("Rivers ORD_STRA >= 5:", len(rivers), flush=True)
+src/run_threshold_water_proximity_ord5.py:369:        real = add_nearest_distance(real, rivers, "dist_river_km")
+src/run_threshold_water_proximity_ord5.py:370:        real = add_nearest_distance(real, lakes, "dist_lake_km")
+src/run_threshold_water_proximity_ord5.py:371:        real = add_nearest_distance(real, coast, "dist_coast_km")
+src/run_threshold_water_proximity_ord5.py:373:        rand = make_random_points_matched(gdf, basins, seed=RANDOM_SEED)
+src/run_threshold_water_proximity_ord5.py:374:        rand = add_nearest_distance(rand, rivers, "dist_river_km")
+src/run_threshold_water_proximity_ord5.py:375:        rand = add_nearest_distance(rand, lakes, "dist_lake_km")
+src/run_threshold_water_proximity_ord5.py:376:        rand = add_nearest_distance(rand, coast, "dist_coast_km")
+src/run_threshold_water_proximity_ord5.py:380:            f"{sector}_sector_nearest_water_BASIN_FILTER_ORD5.csv",
+src/run_threshold_water_proximity_ord5.py:385:            f"{sector}_random_nearest_water_BASIN_FILTER_ORD5.csv",
+src/run_threshold_water_proximity_ord5.py:524:    axes[0].set_ylabel("Odds ratio vs basin-matched random")
+src/run_water_distance_ecdf_allfeatures.py:3:Water-distance ECDF for rivers, lakes, coastlines, and nearest water feature.
+src/run_water_distance_ecdf_allfeatures.py:5:This script compares AI, Power, and TRI facility distances with basin-matched
+src/run_water_distance_ecdf_allfeatures.py:30:        "random": os.path.join(PROX_DIR, "data_center_random_nearest_water_BASIN_FILTER_ORD5.csv"),
+src/run_water_distance_ecdf_allfeatures.py:33:        "sector": os.path.join(PROX_DIR, "power_plant_sector_nearest_water_BASIN_FILTER_ORD5.csv"),
+src/run_water_distance_ecdf_allfeatures.py:34:        "random": os.path.join(PROX_DIR, "power_plant_random_nearest_water_BASIN_FILTER_ORD5.csv"),
+src/run_water_distance_ecdf_allfeatures.py:37:        "sector": os.path.join(PROX_DIR, "industry_TRI_sector_nearest_water_BASIN_FILTER_ORD5.csv"),
+src/run_water_distance_ecdf_allfeatures.py:38:        "random": os.path.join(PROX_DIR, "industry_TRI_random_nearest_water_BASIN_FILTER_ORD5.csv"),
+src/run_water_distance_ecdf_allfeatures.py:87:    print("[INFO] Water-distance ECDF: rivers, lakes, coastlines, nearest water")
+src/run_water_distance_ecdf_allfeatures.py:125:        ("river", "Distance to major rivers (HydroRIVERS ORD_STRA ≥ 5)"),
+src/run_water_distance_ecdf_allfeatures.py:202:        "ECDF of distances to water features: sector vs basin-matched random",
+src/run_water_stress_siting.py:5:This script evaluates whether AI data centers, power plants, and TRI facilities are preferentially located in water-stressed basins. It supports global and basin-matched baselines, generates statistical tables, and summarizes water-stress siting patterns.
+src/run_water_stress_siting.py:133:def safe_sjoin(left_gdf, right_gdf, how="left", predicate="within"):
+src/run_water_stress_siting.py:141:    return gpd.sjoin(L, R, how=how, predicate=predicate)
+src/run_water_stress_siting.py:180:        j = safe_sjoin(pts, poly_gdf[["geometry"]], how="inner", predicate="within")
+src/run_water_stress_siting.py:202:def make_global_bins_from_basins(stress_series):
+src/run_water_stress_siting.py:261:# Load basins + Aqueduct stress
+src/run_water_stress_siting.py:268:    raise RuntimeError("Expected PFAF_ID in HydroBASINS shapefile.")
+src/run_water_stress_siting.py:286:terts, quarts = make_global_bins_from_basins(bas_stress["stress_value"])
+src/run_water_stress_siting.py:291:# Load sectors + attach basin + stress
+src/run_water_stress_siting.py:305:basins_by_sector = {}
+src/run_water_stress_siting.py:309:    joined = safe_sjoin(
+src/run_water_stress_siting.py:318:    basins_by_sector[sec] = joined["pfaf_id_lev08"].astype("Int64").dropna().unique()
+src/run_water_stress_siting.py:343:            use_ids = set(basins_by_sector[sec].tolist())
+src/run_water_stress_siting.py:350:        poolj = safe_sjoin(
+src/run_water_stress_siting.py:451:        "Stress: Aqueduct bws_01_raw via HydroBASINS PFAF6 | Bins: GLOBAL basin quantiles | Random N matched per sector",
