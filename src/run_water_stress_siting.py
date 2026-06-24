@@ -2,7 +2,7 @@
 """
 Water-Stress Siting Analysis for AI, Power, and TRI Facilities
 
-This script evaluates whether AI data centers, power plants, and TRI facilities are preferentially located in water-stressed basins. It supports global and basin-matched baselines, generates statistical tables, and summarizes water-stress siting patterns.
+This script evaluates whether AI data centers, power plants, and TRI facilities are preferentially located in water-stressed basins. It supports all_basins and basin-matched baselines, generates statistical tables, and summarizes water-stress siting patterns.
 
 Input files used:
 - DC_CONUS.csv
@@ -37,7 +37,7 @@ print("[INFO] DEFAULT_OUTPUT_ROOT =", DEFAULT_OUTPUT_ROOT)
 
 # ============================================================
 #  STRESS SITING (AI / Power / TRI)
-# BOTH BASELINES IN ONE CELL (GLOBAL + BASIN_MATCHED)
+# ALL-BASINS BASELINE ONLY
 
 # HOW TO RUN:
 # 1) Set PROJECT_DIR below to the folder that contains your input files.
@@ -82,7 +82,7 @@ STRESS_COL = "bws_01_raw"
 
 BASE_SEED = 7
 SEED_MAP  = {"AI": 101, "Power": 202, "TRI": 303}
-MODE_SEED = {"GLOBAL": 10000, "BASIN_MATCHED": 20000}
+MODE_SEED = {"ALL_BASINS": 10000}
 
 POOL_FACTOR = 5.0
 POOL_CAP    = 300000
@@ -199,7 +199,7 @@ def odds_ratio_2x2(a, b, c, d):
     hi = np.exp(np.log(OR) + z*se)
     return float(OR), float(lo), float(hi)
 
-def make_global_bins_from_basins(stress_series):
+def make_all_basins_bins_from_basins(stress_series):
     s = pd.to_numeric(stress_series, errors="coerce")
     t1, t2 = s.quantile([1/3, 2/3]).values
     q1, q2, q3 = s.quantile([0.25, 0.50, 0.75]).values
@@ -283,7 +283,7 @@ aq_small[STRESS_COL] = pd.to_numeric(aq_small[STRESS_COL], errors="coerce")
 bas_stress = bas8.merge(aq_small, left_on="pfaf6", right_on="pfaf_id", how="left")
 bas_stress = bas_stress.rename(columns={STRESS_COL:"stress_value"}).drop(columns=["pfaf_id"], errors="ignore")
 
-terts, quarts = make_global_bins_from_basins(bas_stress["stress_value"])
+terts, quarts = make_all_basins_bins_from_basins(bas_stress["stress_value"])
 bas_stress["stress_tertile"]  = terts
 bas_stress["stress_quartile"] = quarts
 
@@ -321,8 +321,8 @@ fac = pd.concat(fac_all, ignore_index=True)
 
 def run_mode(mode_name):
     mode = mode_name.upper()
-    if mode not in ["GLOBAL","BASIN_MATCHED"]:
-        raise ValueError("mode must be 'GLOBAL' or 'BASIN_MATCHED'")
+    if mode not in ["ALL_BASINS"]:
+        raise ValueError("mode must be 'ALL_BASINS'")
 
     OUT_FIG    = OUT_DIR / f"analysis4_fig_{mode}_tertiles_quartiles_3x2.png"
     OUT_JOINED = OUT_DIR / f"analysis4_facilities_with_stress_{mode}.csv"
@@ -447,8 +447,8 @@ def run_mode(mode_name):
     ], loc="lower center", ncol=2, frameon=False)
 
     fig.suptitle(
-        "MAIN: Basin-scale water-stress siting (GLOBAL + BASIN-MATCHED random baselines)\n"
-        "Stress: Aqueduct bws_01_raw via HydroBASINS PFAF6 | Bins: GLOBAL basin quantiles | Random N matched per sector",
+        "MAIN: Basin-scale water-stress siting (ALL BASINS random baseline)\n"
+        "Stress: Aqueduct bws_01_raw via HydroBASINS PFAF6 | Bins: ALL BASINS quantiles | Random N matched per sector",
         y=0.98, fontsize=14, fontweight="semibold"
     )
 
@@ -461,7 +461,7 @@ def run_mode(mode_name):
 
     return str(OUT_FIG), str(OUT_JOINED), str(OUT_RANDOM), str(OUT_STATS), stats_df
 
-fig_g, join_g, rand_g, stats_g, df_g = run_mode("GLOBAL")
-fig_b, join_b, rand_b, stats_b, df_b = run_mode("BASIN_MATCHED")
+fig_g, join_g, rand_g, stats_g, df_g = run_mode("ALL_BASINS")
+# Basin-matched baseline removed for final run
 
-pd.concat([df_g, df_b], ignore_index=True)
+df_g
