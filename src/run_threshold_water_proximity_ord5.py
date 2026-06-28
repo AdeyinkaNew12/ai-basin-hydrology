@@ -456,12 +456,12 @@ def main():
     plt.rcParams.update(
         {
             "font.family": "DejaVu Sans",
-            "font.size": 11,
-            "axes.titlesize": 12,
-            "axes.labelsize": 11,
-            "xtick.labelsize": 10,
-            "ytick.labelsize": 10,
-            "legend.fontsize": 10,
+            "font.size": 26,
+            "axes.titlesize": 30,
+            "axes.labelsize": 28,
+            "xtick.labelsize": 24,
+            "ytick.labelsize": 24,
+            "legend.fontsize": 24,
             "figure.titlesize": 14,
         }
     )
@@ -478,7 +478,7 @@ def main():
         "industry_TRI": "^",
     }
 
-    fig, axes = plt.subplots(1, 3, figsize=(15.5, 4.6), sharey=True)
+    fig, axes = plt.subplots(1, 3, figsize=(20, 8), sharey=True)
 
     for ax, feat in zip(axes, features.keys()):
         sub = res[res["feature"] == feat].copy()
@@ -498,10 +498,10 @@ def main():
                 color=sector_color[sector],
                 marker=sector_marker[sector],
                 linestyle="-",
-                linewidth=2.2,
-                markersize=6,
-                capsize=2,
-                elinewidth=1.0,
+                linewidth=5.0,
+                markersize=14,
+                capsize=8,
+                elinewidth=3.5,
                 alpha=0.95,
                 zorder=3,
                 label=sector,
@@ -511,7 +511,7 @@ def main():
             1,
             linestyle="--",
             color="black",
-            linewidth=1.2,
+            linewidth=2.0,
             alpha=0.75,
             zorder=2,
         )
@@ -554,7 +554,7 @@ def main():
         "WaterProximity_threshold_plot_panels_ORD5.png",
     )
 
-    plt.savefig(out_png, dpi=400, bbox_inches="tight")
+    plt.savefig(out_png, dpi=700, bbox_inches="tight", pad_inches=0.20)
     plt.close(fig)
 
     print("\nSaved figure:", out_png, flush=True)
@@ -566,3 +566,141 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# ===== FINAL IOP JOURNAL FIGURE OVERRIDE =====
+# Creates final journal-quality water proximity figure with canonical filename.
+# No title, no experimental suffixes, improved margins, and publication-ready styling.
+
+def make_final_iop_water_proximity_figure():
+    import os
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    import matplotlib.ticker as mticker
+
+    outdir = "/mnt/disk3/aoolaseinde/projects/integrated_dc_water_pathways/results/water_proximity_threshold_ord5"
+    csv = os.path.join(outdir, "WaterProximity_threshold_odds_ratios_ORD5.csv")
+
+    out_png = os.path.join(outdir, "WaterProximity_threshold_plot_panels_ORD5.png")
+    out_pdf = os.path.join(outdir, "WaterProximity_threshold_plot_panels_ORD5.pdf")
+
+    # Remove old experimental figure names
+    for fname in os.listdir(outdir):
+        if fname.startswith("WaterProximity_threshold_plot_panels_ORD5_") and fname.endswith((".png", ".pdf")):
+            try:
+                os.remove(os.path.join(outdir, fname))
+            except OSError:
+                pass
+
+    df = pd.read_csv(csv)
+
+    features = ["river", "lake", "coast"]
+    titles = {
+        "river": "(a) River",
+        "lake": "(b) Lake",
+        "coast": "(c) Coast"
+    }
+
+    sectors = ["data_center", "power_plant", "industry_TRI"]
+    labels = {
+        "data_center": "AI data centers",
+        "power_plant": "Power plants",
+        "industry_TRI": "TRI facilities"
+    }
+
+    colors = {
+        "data_center": "#1f77b4",
+        "power_plant": "#ff7f0e",
+        "industry_TRI": "#2ca02c"
+    }
+
+    markers = {
+        "data_center": "o",
+        "power_plant": "s",
+        "industry_TRI": "^"
+    }
+
+    plt.rcParams.update({
+        "font.family": "DejaVu Sans",
+        "font.size": 15,
+        "axes.titlesize": 18,
+        "axes.labelsize": 16,
+        "xtick.labelsize": 14,
+        "ytick.labelsize": 14,
+        "legend.fontsize": 13,
+        "legend.title_fontsize": 14,
+        "axes.linewidth": 1.2,
+        "pdf.fonttype": 42,
+        "ps.fonttype": 42
+    })
+
+    fig, axes = plt.subplots(1, 3, figsize=(15.5, 5.4), sharey=True)
+
+    for i, feature in enumerate(features):
+        ax = axes[i]
+        sub = df[df["feature"] == feature]
+
+        for sector in sectors:
+            d = sub[sub["sector"] == sector].sort_values("threshold_km")
+            yerr = [
+                d["odds_ratio"] - d["CI_low"],
+                d["CI_high"] - d["odds_ratio"]
+            ]
+
+            ax.errorbar(
+                d["threshold_km"],
+                d["odds_ratio"],
+                yerr=yerr,
+                color=colors[sector],
+                marker=markers[sector],
+                label=labels[sector],
+                linewidth=2.4,
+                markersize=7.5,
+                elinewidth=1.3,
+                capsize=4
+            )
+
+        ax.axhline(1, color="black", linestyle="--", linewidth=1.2)
+        ax.set_title(titles[feature], fontweight="bold")
+        ax.set_xlabel("Distance threshold (km)", fontweight="bold")
+        ax.set_xticks([1, 3, 5, 10])
+        ax.set_xlim(0.5, 10.5)
+        ax.set_ylim(0.35, 3.25)
+        ax.yaxis.set_major_formatter(mticker.FormatStrFormatter("%.1f"))
+        ax.grid(True, which="major", linestyle="-", linewidth=0.5, alpha=0.22)
+
+    axes[0].set_ylabel(
+        "Odds ratio relative to random",
+        fontweight="bold",
+        labelpad=15
+    )
+
+    handles, legend_labels = axes[0].get_legend_handles_labels()
+    fig.legend(
+        handles,
+        legend_labels,
+        title="Sector",
+        loc="lower center",
+        bbox_to_anchor=(0.5, 0.01),
+        ncol=3,
+        frameon=True,
+        edgecolor="black"
+    )
+
+    fig.subplots_adjust(
+        left=0.18,
+        right=0.985,
+        top=0.88,
+        bottom=0.25,
+        wspace=0.13
+    )
+
+    fig.savefig(out_png, dpi=600, bbox_inches="tight", pad_inches=0.12)
+    fig.savefig(out_pdf, bbox_inches="tight", pad_inches=0.12)
+    plt.close(fig)
+
+    print("Saved final journal PNG:", out_png)
+    print("Saved final journal PDF:", out_pdf)
+
+
+make_final_iop_water_proximity_figure()
