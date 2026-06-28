@@ -59,7 +59,7 @@ CANDIDATE_POOL = 80
 
 LABEL_FONTSIZE = 7.4
 LABEL_WEIGHT = "semibold"
-TEXT_EFFECTS = [pe.withStroke(linewidth=2.0, foreground="white")]
+TEXT_EFFECTS = [pe.withStroke(linewidth=1.2, foreground="white")]
 
 EDGE_COLOR = "black"
 EDGE_LW = 1.0
@@ -229,8 +229,8 @@ def draw_panel(ax, gdf, color_map, panel_letter, title, total):
             sub.plot(ax=ax, color=color_map[lbl], edgecolor=EDGE_COLOR, linewidth=EDGE_LW)
 
     ax.text(0.01, 0.99, panel_letter, transform=ax.transAxes,
-            ha="left", va="top", fontsize=13, fontweight="bold")
-    ax.set_title(title, fontsize=13, pad=6)
+            ha="left", va="top", fontsize=9.5, fontweight="normal")
+    ax.set_title(title, fontsize=17, fontweight="bold", pad=10)
 
     place_labels_bbox(ax, gdf, N_LABELS, LABEL_MIN_PCT, CANDIDATE_POOL)
 
@@ -272,7 +272,7 @@ grn_map = {
 }
 
 plt.rcParams.update({"font.family": "DejaVu Sans"})
-fig, axes = plt.subplots(1, 3, figsize=(16.5, 5.2), dpi=450)
+fig, axes = plt.subplots(1, 3, figsize=(17.5, 5.6), dpi=450)
 
 draw_panel(axes[0], m_ai,  blue_map, "a", "AI Data Centers",  tot_ai)
 draw_panel(axes[1], m_pwr, orng_map, "b", "Power Facilities", tot_pwr)
@@ -286,8 +286,10 @@ axes[2].legend(handles=legend_handles(grn_map),  title="Share of national facili
                loc="upper center", bbox_to_anchor=(0.5, -0.08), ncol=3, frameon=False, fontsize=9, title_fontsize=9)
 
 plt.subplots_adjust(bottom=0.24, wspace=0.08)
-plt.savefig(OUT_FIG, dpi=600, bbox_inches="tight")
+plt.savefig(OUT_FIG, dpi=600, bbox_inches="tight", pad_inches=0.10)
 plt.show()
 
 print("✅ Saved:", OUT_FIG)
 print(f"Labels: up to {N_LABELS} per panel | min {LABEL_MIN_PCT:.2f}% | candidates {CANDIDATE_POOL}")
+
+print(f"✅ Final journal HUC2 figure saved: {OUT_FIG}")
