@@ -1305,7 +1305,6 @@ site_id,coord_key,Latitude,Longitude,facility_count,providers,facilities,address
 1304,"45.557854,-122.917023",45.5578535,-122.917023,1,Flexential,Portland - Hillsboro 2 Data Center,"5737 NE Huffman St, Hillsboro, OR 97124, USA"
 1305,"45.559197,-122.938004",45.5591974,-122.9380037,1,QTS Data Centers,Hillsboro 3 Data Center,"5419 NE Starr Blvd, Hillsboro, OR 97124, USA"
 1306,"45.559203,-122.938018",45.559203,-122.938018,1,Flexential,Portland - Hillsboro 3 Data Center,"5419 NE Starr Blvd, Hillsboro, OR, USA"
-1307,"45.567611,-73.75712",45.567611,-73.7571198,1,CenterServ,Laval Data Center,"2572 Boulevard Daniel-Johnson, Laval, QC, Canada"
 1308,"45.568766,-122.920568",45.5687664,-122.9205682,1,Digital Realty,Portland PDX12 Data Center,"5870 Northeast Schaaf Street, Hillsboro, OR 97124, USA"
 1309,"45.63179,-121.200943",45.6317898,-121.2009427,1,Google,"The Dalles, OR Data Center","4200 Columbia Rd, The Dalles, OR 97058, USA"
 1310,"45.633229,-121.199659",45.633229,-121.199659,1,Google,The Dalles,"4200 Columbia Rd, The Dalles"

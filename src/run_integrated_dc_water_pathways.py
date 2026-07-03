@@ -697,8 +697,56 @@ def main() -> None:
 
     dc_unique["supply_pathway_class"] = dc_unique.apply(classify_supply_pathway, axis=1)
 
+    # ------------------------------------------------------------------
+    # FINAL SAFETY CHECK
+    # Spatial joins can expand rows when one point intersects multiple
+    # polygons/features. Keep one record per original data-center site
+    # before exporting tables or generating summaries.
+    # ------------------------------------------------------------------
+    before_n = len(dc_unique)
+    before_unique = dc_unique["dc_id"].nunique()
+
+    dc_unique = (
+        dc_unique
+        .sort_values(["dc_id"])
+        .drop_duplicates(subset="dc_id", keep="first")
+        .copy()
+    )
+
+    after_n = len(dc_unique)
+    after_unique = dc_unique["dc_id"].nunique()
+
+    print(f"[CHECK] Rows before final dc_id dedupe: {before_n}")
+    print(f"[CHECK] Unique dc_id before final dedupe: {before_unique}")
+    print(f"[CHECK] Rows after final dc_id dedupe: {after_n}")
+    print(f"[CHECK] Unique dc_id after final dedupe: {after_unique}")
+
+    if after_n != after_unique:
+        raise ValueError("Duplicate dc_id values remain after final dedupe.")
+
+    # Export corrected one-row-per-site table
     dc_export = pd.DataFrame(dc_unique.drop(columns="geometry"))
     dc_export.to_csv(os.path.join(tabledir, "dc_water_supply_pathways.csv"), index=False)
+
+    # Export corrected Figure 10 summary
+    pathway_summary = (
+        dc_export["supply_pathway_class"]
+        .value_counts()
+        .rename_axis("supply_pathway_class")
+        .reset_index(name="n_sites")
+    )
+    pathway_summary["percent_sites"] = (
+        pathway_summary["n_sites"] / pathway_summary["n_sites"].sum() * 100
+    ).round(1)
+
+    pathway_summary.to_csv(
+        os.path.join(tabledir, "figure10_supply_pathway_summary_corrected.csv"),
+        index=False
+    )
+
+    print("\n[CORRECTED FIGURE 10 SUMMARY]")
+    print(pathway_summary)
+    print("Total sites:", pathway_summary["n_sites"].sum())
 
     huc8_dc_counts = dc_unique.groupby(["HUC8", "HUC8_NAME"], dropna=False).size().reset_index(name="dc_count")
     huc8_dc_counts.to_csv(os.path.join(tabledir, "huc8_dc_counts.csv"), index=False)
