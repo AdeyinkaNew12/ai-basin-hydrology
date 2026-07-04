@@ -718,6 +718,30 @@ top_county_suppliers.to_csv(top_county_csv, index=False)
 aq_enrichment_nonzero.to_csv(aq_csv, index=False)
 stats_results.to_csv(stats_csv, index=False)
 dc_proximity_summary.to_csv(dc_summary_csv, index=False)
+# ---------------------------------------------------------------------
+# FINAL SAFETY DEDUPLICATION
+# Ensure one output row per unique AI data-center site before saving
+# and before computing pathway counts/figures.
+# ---------------------------------------------------------------------
+if "coord_key" in dc_unique.columns:
+    before = len(dc_unique)
+    dc_unique = dc_unique.drop_duplicates(subset=["coord_key"]).copy()
+    after = len(dc_unique)
+    print(f"[DEDUP] dc_unique by coord_key: {before:,} -> {after:,}")
+else:
+    before = len(dc_unique)
+    dc_unique = dc_unique.drop_duplicates(subset=["Latitude", "Longitude"]).copy()
+    after = len(dc_unique)
+    print(f"[DEDUP] dc_unique by Latitude/Longitude: {before:,} -> {after:,}")
+
+pathway_counts = (
+    dc_unique["combined_supply_pathway_proxy"]
+    .fillna("Mixed or uncertain")
+    .value_counts()
+    .rename_axis("combined_supply_pathway_proxy")
+    .reset_index(name="dc_count")
+)
+
 pathway_counts.to_csv(pathway_csv, index=False)
 dc_unique.to_crs("EPSG:4326").drop(columns="geometry").to_csv(dc_assign_csv, index=False)
 
