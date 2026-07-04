@@ -80,7 +80,11 @@ def clean_vec(s):
     return v
 
 def load_dist(sec, grp):
-    prox_dir = os.path.join(DEFAULT_DATA_ROOT, "Water_Proximity_FROM_RAW_BASIN_FILTER_ORD5")
+    prox_dir = (
+        "/mnt/disk3/aoolaseinde/projects/"
+        "integrated_dc_water_pathways/results/"
+        "water_proximity_threshold_ord5"
+    )
 
     file_map = {
         ("AI", "sector"): "data_center_sector_nearest_water_BASIN_FILTER_ORD5.csv",
