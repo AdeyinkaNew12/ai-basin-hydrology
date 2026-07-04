@@ -15,8 +15,8 @@ from pathlib import Path
 SCRIPTS = [
     "run_groundwater_dc_analysis.py",
     "run_major_river_proximity.py",
-    "run_ecdf_sector_basin_matched.py",
     "run_threshold_water_proximity_ord5.py",
+    "run_ecdf_sector_basin_matched.py",
     "run_water_distance_ecdf_allfeatures.py",
     "run_huc2_facility_share_map.py",
     "run_nwm_hydroregime_recomputed_journal.py",
