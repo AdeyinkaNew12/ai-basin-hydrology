@@ -9,3 +9,23 @@ outputs/
 venv/
 *.bak
 rc
+
+# Python cache
+__pycache__/
+*.pyc
+
+# temporary backups
+*.bak
+*.BACKUP*
+*.log
+
+# verification outputs
+*_confirmed.csv
+CHECK_*.txt
+huc_usage_check.txt
+run_all_*.log
+nwm_run_*.log
+
+# local verification figures
+FIG_*.png
+WaterProximity_threshold_plot_panels_ORD5.png
