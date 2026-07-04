@@ -34,7 +34,7 @@ POWER_FILE = os.path.join(PROJECT_DIR, "Power.xlsx")
 TRI_FILE   = os.path.join(PROJECT_DIR, "TRI_2024.csv")
 BASINS_SHP = os.path.join(PROJECT_DIR, "hybas_na_lev08_v1c.shp")
 
-OUTDIR = os.path.join(PROJECT_DIR, "NWM_HydroRegime_FULL_RECOMPUTED_JOURNAL")
+OUTDIR = "/mnt/disk3/aoolaseinde/projects/integrated_dc_water_pathways/results/nwm_hydroregime"
 
 os.makedirs(OUTDIR, exist_ok=True)
 
@@ -207,7 +207,7 @@ for c in ["AI_present", "Power_present", "TRI_present"]:
 for c in ["n_AI", "n_Power", "n_TRI"]:
     bm[c] = bm[c].fillna(0).astype(int)
 
-PRES_OUT = os.path.join(OUTDIR, "basin_presence_counts_RECOMPUTED.csv")
+PRES_OUT = os.path.join(OUTDIR, "basin_presence_counts.csv")
 bm.to_csv(PRES_OUT, index=False)
 print("Saved:", PRES_OUT)
 
@@ -240,7 +240,7 @@ print("Coordinates:", list(ds.coords))
 print("Dimensions:", dict(ds.dims))
 
 
-MAP_FILE = os.path.join(OUTDIR, "feature_to_basin_RECOMPUTED.parquet")
+MAP_FILE = os.path.join(OUTDIR, "feature_to_basin.parquet")
 
 if os.path.exists(MAP_FILE):
     print("Loading cached feature-to-basin map:", MAP_FILE)
@@ -307,7 +307,7 @@ top_reach = (
 
 sel_features = top_reach["feature_id"].astype(np.int64).unique()
 
-selected_csv = os.path.join(OUTDIR, "selected_reach_per_basin_RECOMPUTED.csv")
+selected_csv = os.path.join(OUTDIR, "selected_reach_per_basin.csv")
 top_reach.to_csv(selected_csv, index=False)
 print("Saved:", selected_csv)
 print("Selected reaches:", len(sel_features))
@@ -324,7 +324,7 @@ BATCH_SIZE = 250
 BATCH_DIR = os.path.join(OUTDIR, "metric_batches")
 os.makedirs(BATCH_DIR, exist_ok=True)
 
-HYDRO_OUT = os.path.join(OUTDIR, "basin_hydrologic_metrics_RECOMPUTED.csv")
+HYDRO_OUT = os.path.join(OUTDIR, "basin_hydrologic_metrics.csv")
 
 if (not RECOMPUTE_NWM) and os.path.exists(HYDRO_OUT):
     print(f"Using cached hydrologic metrics: {HYDRO_OUT}")
@@ -472,7 +472,7 @@ master["any_infra"] = (
 master["group_excl"] = np.where(master["any_infra"] == 0, "None", "Infrastructure")
 master = master.dropna(subset=["RBI", "season_conc", "CVQ"]).copy()
 
-MASTER_OUT = os.path.join(OUTDIR, "basin_master_presence_hydro_RECOMPUTED.csv")
+MASTER_OUT = os.path.join(OUTDIR, "basin_master_presence_hydro.csv")
 master.to_csv(MASTER_OUT, index=False)
 print("Saved:", MASTER_OUT)
 
@@ -564,7 +564,7 @@ for sector in SECTORS:
 
 effects = pd.DataFrame(effect_rows)
 
-EFFECTS_OUT = os.path.join(OUTDIR, "NWM_matched_baseline_effect_sizes_RECOMPUTED.csv")
+EFFECTS_OUT = os.path.join(OUTDIR, "NWM_matched_baseline_effect_sizes.csv")
 effects.to_csv(EFFECTS_OUT, index=False)
 print("Saved:", EFFECTS_OUT)
 
@@ -592,7 +592,7 @@ plt.rcParams.update({
     "figure.facecolor": "white",
 })
 
-FIG1 = os.path.join(OUTDIR, "FIG_1_MatchedBaseline_ECDF_3x3_FINAL_JOURNAL.png")
+FIG1 = os.path.join(OUTDIR, "FIG_1_NWM_HydroRegime_ECDF.png")
 
 fig, axes = plt.subplots(3, 3, figsize=(13.4, 10.2), sharey=True)
 fig.subplots_adjust(left=0.09, right=0.985, bottom=0.10, top=0.90, wspace=0.20, hspace=0.22)
@@ -640,7 +640,7 @@ plt.close()
 print("Saved:", FIG1)
 
 
-FIG2 = os.path.join(OUTDIR, "FIG_2_MatchedBaseline_EffectSizes_FINAL_JOURNAL.png")
+FIG2 = os.path.join(OUTDIR, "FIG_2_NWM_HydroRegime_EffectSizes.png")
 
 fig2, ax = plt.subplots(figsize=(10.8, 6.8))
 fig2.subplots_adjust(left=0.24, right=0.98, bottom=0.16, top=0.88)
@@ -705,7 +705,7 @@ plt.close()
 print("Saved:", FIG2)
 
 
-FIG3 = os.path.join(OUTDIR, "FIG_3_CombinedSector_ECDF_3panel_FINAL_JOURNAL.png")
+FIG3 = os.path.join(OUTDIR, "FIG_3_NWM_HydroRegime_CombinedSectors.png")
 
 fig3, axes3 = plt.subplots(1, 3, figsize=(13.4, 4.8), sharey=True)
 fig3.subplots_adjust(left=0.06, right=0.985, bottom=0.18, top=0.82, wspace=0.20)
