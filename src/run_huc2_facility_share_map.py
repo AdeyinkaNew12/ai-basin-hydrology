@@ -6,8 +6,8 @@ This script aggregates AI data centers, power plants, and TRI facilities to HUC2
 
 Input files used:
 - DC_CONUS.csv
-- Power.xlsx
-- TRI_2024.csv
+- Power_Unique_Site.xlsx
+- TRI_2024_Unique_Site.csv
 - WBD_National_GPKG.gpkg
 
 Server/GitHub version:
@@ -47,8 +47,9 @@ import matplotlib.patheffects as pe
 
 PROJECT_DIR = DEFAULT_DATA_ROOT
 AI_FILE = os.path.join(DEFAULT_DATA_ROOT, "DC_CONUS.csv")
-POWER_FILE = os.path.join(DEFAULT_DATA_ROOT, "Power.xlsx")
-TRI_FILE = os.path.join(DEFAULT_DATA_ROOT, "TRI_2024.csv")
+POWER_FILE = os.path.join(DEFAULT_DATA_ROOT, "Power_Unique_Site.xlsx")
+TRI_FILE = os.path.join(DEFAULT_DATA_ROOT, "TRI_2024_Unique_Site.csv")
+HYBAS_FILE = os.path.join(DEFAULT_DATA_ROOT, "hybas_na_lev08_v1c.shp")
 HUC_FILE     = os.path.join(PROJECT_DIR, "WBD_National_GPKG", "WBD_National_GPKG.gpkg")
 
 OUT_FIG = os.path.join(DEFAULT_OUTPUT_ROOT, 'HUC2_FacilitySharePct_3panel_AI_Power_TRI_BBOXLABELS.png')
@@ -97,7 +98,26 @@ def find_excel_header_row(path, sheet_name=None, max_rows=80):
             has_lon = any(("longitude" in v) or (v.strip() in ["lon","long","lng"]) for v in row_vals)
             if has_lat and has_lon:
                 return r, sh
-    raise RuntimeError("Could not find Latitude/Longitude header row in Power.xlsx")
+    raise RuntimeError("Could not find Latitude/Longitude header row in Power_Unique_Site.xlsx")
+
+
+def filter_to_hydrobasins_domain(gdf, hybas_file, label):
+    """Keep only points inside the HydroBASINS CONUS analysis domain."""
+    basins = gpd.read_file(hybas_file).to_crs(gdf.crs)
+    before = len(gdf)
+
+    joined = gpd.sjoin(
+        gdf,
+        basins[["HYBAS_ID", "geometry"]],
+        how="inner",
+        predicate="within"
+    )
+
+    joined = joined.drop(columns=[c for c in ["index_right", "HYBAS_ID"] if c in joined.columns])
+    after = len(joined)
+
+    print(f"✅ CONUS HydroBASINS filter: {label} {before} -> {after}")
+    return joined
 
 def load_points_csv(path, name, force_lat=None, force_lon=None):
     df = pd.read_csv(path, low_memory=False)
@@ -148,13 +168,20 @@ def pct_classify(pct_series):
     return cats
 
 def make_huc2_pct_map(points_gdf, huc2_gdf, HUC2_ID):
+    # Use the HydroBASINS-filtered facility count as the denominator
+    # so the HUC2 map matches the ECDF / major-river / water-proximity analyses.
+    total = int(len(points_gdf))
+
     j = gpd.sjoin(points_gdf, huc2_gdf[[HUC2_ID, "geometry"]], how="inner", predicate="within")
     counts = j.groupby(HUC2_ID).size().rename("count").reset_index()
 
     m = huc2_gdf[[HUC2_ID, "geometry"]].merge(counts, on=HUC2_ID, how="left")
     m["count"] = m["count"].fillna(0).astype(int)
 
-    total = int(m["count"].sum())
+    assigned = int(m["count"].sum())
+    if assigned != total:
+        print(f"⚠️ HUC2 assigned {assigned:,} of {total:,}; percentages use HydroBASINS-filtered denominator.")
+
     m["pct"] = 0.0 if total == 0 else (100.0 * m["count"] / total)
     m["class"] = pct_classify(m["pct"])
     return m, total
@@ -255,7 +282,13 @@ ai  = load_points_csv(AI_FILE, "AI").to_crs("EPSG:5070")
 pwr = load_points_power_excel(POWER_FILE).to_crs("EPSG:5070")
 tri = load_points_csv(TRI_FILE, "TRI", force_lat="12. LATITUDE", force_lon="13. LONGITUDE").to_crs("EPSG:5070")
 
-print("✅ Loaded:", "AI", len(ai), "| Power", len(pwr), "| TRI", len(tri))
+print("✅ Loaded before CONUS filter:", "AI", len(ai), "| Power", len(pwr), "| TRI", len(tri))
+
+ai  = filter_to_hydrobasins_domain(ai, HYBAS_FILE, "AI")
+pwr = filter_to_hydrobasins_domain(pwr, HYBAS_FILE, "Power")
+tri = filter_to_hydrobasins_domain(tri, HYBAS_FILE, "TRI")
+
+print("✅ Loaded after CONUS filter:", "AI", len(ai), "| Power", len(pwr), "| TRI", len(tri))
 
 m_ai,  tot_ai  = make_huc2_pct_map(ai,  huc2, HUC2_ID)
 m_pwr, tot_pwr = make_huc2_pct_map(pwr, huc2, HUC2_ID)
