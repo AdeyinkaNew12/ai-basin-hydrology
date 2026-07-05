@@ -3,7 +3,7 @@
 Threshold water-proximity analysis from raw facility inventories.
 
 Workflow:
-1. Load raw facility files: DC_CONUS.csv, Power.xlsx, TRI_2024.csv
+1. Load raw facility files: DC_CONUS.csv, Power_Unique_Site.xlsx, TRI_2024_Unique_Site.csv
 2. Convert valid latitude/longitude records to projected points
 3. Filter facilities to the HydroBASINS HUC8 study domain
 4. Restrict HydroRIVERS to major rivers using ORD_STRA >= 5
@@ -229,8 +229,8 @@ def main():
     # Locate inputs
     # -------------------------
     ai_file = find_file("DC_CONUS.csv")
-    power_file = find_file("Power.xlsx")
-    tri_file = find_file("TRI_2024.csv")
+    power_file = find_file("Power_Unique_Site.xlsx")
+    tri_file = find_file("TRI_2024_Unique_Site.csv")
 
     basins_shp = find_file("hybas_na_lev08_v1c.shp")
     rivers_shp = find_file("HydroRIVERS_v10_na.shp")

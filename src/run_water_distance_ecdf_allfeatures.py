@@ -22,11 +22,11 @@ DATA_ROOT = DATA_FOLDERS["water_project"]
 OUTDIR = output_folder("water_distance_ecdf_allfeatures")
 os.makedirs(OUTDIR, exist_ok=True)
 
-PROX_DIR = os.path.join(DATA_ROOT, "Water_Proximity_FROM_RAW_BASIN_FILTER_ORD5")
+PROX_DIR = "/mnt/disk3/aoolaseinde/projects/integrated_dc_water_pathways/results/water_proximity_threshold_ord5"
 
 FILES = {
     "AI": {
-        "sector": os.path.join(DATA_ROOT, "AI_sector_distances.csv"),
+        "sector": os.path.join(PROX_DIR, "data_center_sector_nearest_water_BASIN_FILTER_ORD5.csv"),
         "random": os.path.join(PROX_DIR, "data_center_random_nearest_water_BASIN_FILTER_ORD5.csv"),
     },
     "Power": {

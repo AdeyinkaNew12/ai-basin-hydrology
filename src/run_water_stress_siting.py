@@ -6,8 +6,8 @@ This script evaluates whether AI data centers, power plants, and TRI facilities 
 
 Input files used:
 - DC_CONUS.csv
-- Power.xlsx
-- TRI_2024.csv
+- Power_Unique_Site.xlsx
+- TRI_2024_Unique_Site.csv
 - Aqueduct40_baseline_monthly_y2023m07d05.csv
 - hybas_na_lev08_v1c.shp
 
@@ -66,8 +66,8 @@ from scipy.stats import chi2_contingency
 PROJECT_DIR = Path(DATA_FOLDERS["water_project"])
 
 AI_FILE       = PROJECT_DIR / "DC_CONUS.csv"
-POWER_FILE    = PROJECT_DIR / "Power.xlsx"
-TRI_FILE      = PROJECT_DIR / "TRI_2024.csv"
+POWER_FILE    = PROJECT_DIR / "Power_Unique_Site.xlsx"
+TRI_FILE      = PROJECT_DIR / "TRI_2024_Unique_Site.csv"
 BASINS_SHP    = PROJECT_DIR / "hybas_na_lev08_v1c.shp"
 AQUEDUCT_CSV  = PROJECT_DIR / "Aqueduct40_baseline_monthly_y2023m07d05.csv"
 

@@ -40,8 +40,8 @@ DEFAULT_OUTPUT_ROOT = output_folder("major_river_proximity")
 os.makedirs(DEFAULT_OUTPUT_ROOT, exist_ok=True)
 
 AI_FILE = os.path.join(DEFAULT_DATA_ROOT, "DC_CONUS.csv")
-POWER_FILE = os.path.join(DEFAULT_DATA_ROOT, "Power.xlsx")
-TRI_FILE = os.path.join(DEFAULT_DATA_ROOT, "TRI_2024.csv")
+POWER_FILE = os.path.join(DEFAULT_DATA_ROOT, "Power_Unique_Site.xlsx")
+TRI_FILE = os.path.join(DEFAULT_DATA_ROOT, "TRI_2024_Unique_Site.csv")
 BASINS_SHP = os.path.join(DEFAULT_DATA_ROOT, "hybas_na_lev08_v1c.shp")
 RIVERS_SHP = os.path.join(DEFAULT_DATA_ROOT, "HydroRIVERS_v10_na.shp")
 
