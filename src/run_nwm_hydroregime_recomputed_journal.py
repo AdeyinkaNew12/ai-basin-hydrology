@@ -30,8 +30,8 @@ from common_paths import DATA_FOLDERS, output_folder
 PROJECT_DIR = DATA_FOLDERS["nwm_hydroregime"]
 
 AI_FILE    = os.path.join(PROJECT_DIR, "DC_CONUS.csv")
-POWER_FILE = os.path.join(PROJECT_DIR, "Power_Unique_Site.xlsx")
-TRI_FILE   = os.path.join(PROJECT_DIR, "TRI_2024_Unique_Site.csv")
+POWER_FILE = os.path.join(PROJECT_DIR, "Power_Unique_Site_CONUS.xlsx")
+TRI_FILE   = os.path.join(PROJECT_DIR, "TRI_2024_Unique_Site_CONUS.csv")
 BASINS_SHP = os.path.join(PROJECT_DIR, "hybas_na_lev08_v1c.shp")
 
 OUTDIR = "/mnt/disk3/aoolaseinde/projects/integrated_dc_water_pathways/results/nwm_hydroregime"
@@ -112,7 +112,7 @@ def load_power_excel(path):
 
     lat_col, lon_col = find_lat_lon_columns(df0)
     if lat_col is None or lon_col is None:
-        raise ValueError("Could not find lat/lon columns in Power_Unique_Site.xlsx")
+        raise ValueError("Could not find lat/lon columns in Power_Unique_Site_CONUS.xlsx")
 
     df0[lat_col] = pd.to_numeric(df0[lat_col], errors="coerce")
     df0[lon_col] = pd.to_numeric(df0[lon_col], errors="coerce")
