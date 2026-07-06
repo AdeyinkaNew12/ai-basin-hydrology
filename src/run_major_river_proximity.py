@@ -320,7 +320,7 @@ def main():
         "Power",
         force_lat="Latitude",
         force_lon="Longitude",
-        excel_header=1,
+        excel_header=0,
     )
 
     print("[INFO] Raw counts:", "AI", len(ai), "Power", len(pwr), "TRI", len(tri))
@@ -547,6 +547,19 @@ def main():
         sector_props = [(g_in["dist_river_km"] <= t).mean() for t in SENS_THRESHOLDS_KM]
         random_props = [(rd["dist_river_km"] <= t).mean() for t in SENS_THRESHOLDS_KM]
 
+        if "sensitivity_rows" not in locals():
+            sensitivity_rows = []
+        for t, ps, pr in zip(SENS_THRESHOLDS_KM, sector_props, random_props):
+            sensitivity_rows.append({
+                "sector": sector,
+                "threshold_km": t,
+                "sector_prop": ps,
+                "sector_pct": ps * 100,
+                "random_prop": pr,
+                "random_pct": pr * 100,
+                "diff_pp": (ps - pr) * 100,
+            })
+
         ax2.plot(x2, sector_props, marker="o", label=sector)
         ax2.plot(x2, random_props, marker="o", label="Random")
         ax2.set_xticks(x2)
@@ -566,6 +579,12 @@ def main():
     )
 
     plt.tight_layout()
+    sensitivity_df = pd.DataFrame(sensitivity_rows)
+    sensitivity_out = os.path.join(DEFAULT_OUTPUT_ROOT, "MajorRiverProximity_sensitivity_10_25_50_ORD_STRA.csv")
+    sensitivity_df.to_csv(sensitivity_out, index=False)
+    print("[SAVED]", sensitivity_out)
+    print(sensitivity_df)
+
     plt.savefig(OUT_FIG, dpi=300, bbox_inches="tight")
     plt.close()
 
