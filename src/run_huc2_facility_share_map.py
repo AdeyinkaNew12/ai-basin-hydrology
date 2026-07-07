@@ -139,28 +139,45 @@ def load_points_csv(path, name, force_lat=None, force_lon=None):
     return gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df[lon], df[lat]), crs="EPSG:4326")
 
 def load_points_power_excel(path):
-    df = pd.read_excel(
-        path,
-        sheet_name="Plant",
-        header=1
-    )
+    """
+    Robust loader for cleaned Power_Unique_Site_CONUS.xlsx.
+    Handles Sheet1/Plant sheet names and normal Latitude/Longitude columns.
+    """
+    import pandas as pd
+    import geopandas as gpd
 
-    df.columns = df.columns.astype(str).str.strip()
+    path = str(path)
+    xls = pd.ExcelFile(path)
+    sheet = "Plant" if "Plant" in xls.sheet_names else xls.sheet_names[0]
 
-    lat_col = "Latitude"
-    lon_col = "Longitude"
+    df = pd.read_excel(path, sheet_name=sheet)
+    df.columns = [str(c).strip() for c in df.columns]
+
+    def find_col(options):
+        lookup = {c.lower(): c for c in df.columns}
+        for opt in options:
+            if opt.lower() in lookup:
+                return lookup[opt.lower()]
+        raise ValueError(
+            f"Could not find any of these columns: {options}\n"
+            f"Available columns are: {list(df.columns)}"
+        )
+
+    lat_col = find_col(["Latitude", "latitude", "lat", "LAT"])
+    lon_col = find_col(["Longitude", "longitude", "lon", "LON", "long"])
 
     df[lat_col] = pd.to_numeric(df[lat_col], errors="coerce")
     df[lon_col] = pd.to_numeric(df[lon_col], errors="coerce")
-
     df = df.dropna(subset=[lat_col, lon_col]).copy()
+
+    print(f"[INFO] Loaded Power Excel sheet: {sheet}")
+    print(f"[INFO] Power rows with coordinates: {len(df)}")
 
     return gpd.GeoDataFrame(
         df,
         geometry=gpd.points_from_xy(df[lon_col], df[lat_col]),
         crs="EPSG:4326"
     )
-
 def pct_classify(pct_series):
     v = pd.Series(pct_series).astype(float)
     cats = pd.cut(v, bins=BINS, labels=BIN_LABELS, include_lowest=True, right=True).astype(str)
