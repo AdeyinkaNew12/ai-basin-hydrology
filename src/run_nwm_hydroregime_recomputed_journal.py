@@ -107,7 +107,7 @@ def load_points_csv(path):
 
 
 def load_power_excel(path):
-    df0 = pd.read_excel(path, header=1, engine="openpyxl")
+    df0 = pd.read_excel(path, engine="openpyxl")
     df0.columns = df0.columns.astype(str).str.strip()
 
     lat_col, lon_col = find_lat_lon_columns(df0)

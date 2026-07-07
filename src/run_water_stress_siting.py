@@ -299,7 +299,7 @@ if ("12. LATITUDE" in tri_cols) and ("13. LONGITUDE" in tri_cols):
 else:
     tri = load_points_any(TRI_FILE, "TRI")
 
-pwr = load_points_any(POWER_FILE, "Power", force_lat="Latitude", force_lon="Longitude", excel_header=1)
+pwr = load_points_any(POWER_FILE, "Power", force_lat="Latitude", force_lon="Longitude")
 
 fac_all = []
 basins_by_sector = {}
