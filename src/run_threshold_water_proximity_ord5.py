@@ -243,7 +243,7 @@ def main():
     mark("Loading raw facility files...")
 
     dc = pd.read_csv(ai_file)
-    power = pd.read_excel(power_file, header=1)
+    power = pd.read_excel(power_file)
     tri = pd.read_csv(tri_file, low_memory=False)
 
     dc.columns = dc.columns.str.strip()
