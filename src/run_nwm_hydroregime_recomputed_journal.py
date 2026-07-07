@@ -29,9 +29,9 @@ from common_paths import DATA_FOLDERS, output_folder
 
 PROJECT_DIR = DATA_FOLDERS["nwm_hydroregime"]
 
-AI_FILE    = os.path.join(PROJECT_DIR, "DC_CONUS.csv")
-POWER_FILE = os.path.join(PROJECT_DIR, "Power_Unique_Site_CONUS.xlsx")
-TRI_FILE   = os.path.join(PROJECT_DIR, "TRI_2024_Unique_Site_CONUS.csv")
+AI_FILE = "/mnt/disk3/aoolaseinde/data/WaterProject/DC_CONUS.csv"
+POWER_FILE = "/mnt/disk3/aoolaseinde/data/WaterProject/Power_Unique_Site_CONUS.xlsx"
+TRI_FILE = "/mnt/disk3/aoolaseinde/data/WaterProject/TRI_2024_Unique_Site_CONUS.csv"
 BASINS_SHP = os.path.join(PROJECT_DIR, "hybas_na_lev08_v1c.shp")
 
 OUTDIR = "/mnt/disk3/aoolaseinde/projects/integrated_dc_water_pathways/results/nwm_hydroregime"
@@ -326,138 +326,140 @@ os.makedirs(BATCH_DIR, exist_ok=True)
 
 HYDRO_OUT = os.path.join(OUTDIR, "basin_hydrologic_metrics.csv")
 
-if (not RECOMPUTE_NWM) and os.path.exists(HYDRO_OUT):
+if (not RECOMPUTE_NWM) and os.path.exists(HYDRO_OUT) and os.path.getsize(HYDRO_OUT) > 0:
     print(f"Using cached hydrologic metrics: {HYDRO_OUT}")
-    basin_metrics = pd.read_csv(HYDRO_OUT)
+    bas_metrics = pd.read_csv(HYDRO_OUT)
+
 else:
     print("Opening NWM Zarr metadata...")
 
+    ds_sub = ds.sel(time=slice(START_DATE, END_DATE))
 
-ds_sub = ds.sel(time=slice(START_DATE, END_DATE))
+    fid_index = pd.Index(ds_sub["feature_id"].values.astype(np.int64))
+    sel_features = np.asarray(sel_features, dtype=np.int64)
 
-fid_index = pd.Index(ds_sub["feature_id"].values.astype(np.int64))
-sel_features = np.asarray(sel_features, dtype=np.int64)
+    keep_pos_all = fid_index.get_indexer(sel_features)
+    valid_mask = keep_pos_all >= 0
 
-keep_pos_all = fid_index.get_indexer(sel_features)
-valid_mask = keep_pos_all >= 0
+    keep_pos_all = keep_pos_all[valid_mask]
+    sel_features_valid = sel_features[valid_mask]
 
-keep_pos_all = keep_pos_all[valid_mask]
-sel_features_valid = sel_features[valid_mask]
+    print("Total selected reaches found in NWM:", len(sel_features_valid))
+    print("Batch size:", BATCH_SIZE)
 
-print("Total selected reaches found in NWM:", len(sel_features_valid))
-print("Batch size:", BATCH_SIZE)
+    batch_files = []
 
-batch_files = []
+    for b0 in range(0, len(keep_pos_all), BATCH_SIZE):
+        b1 = min(b0 + BATCH_SIZE, len(keep_pos_all))
+        batch_id = b0 // BATCH_SIZE + 1
 
-for b0 in range(0, len(keep_pos_all), BATCH_SIZE):
-    b1 = min(b0 + BATCH_SIZE, len(keep_pos_all))
-    batch_id = b0 // BATCH_SIZE + 1
+        batch_file = os.path.join(BATCH_DIR, f"metrics_batch_{batch_id:04d}.parquet")
 
-    batch_file = os.path.join(BATCH_DIR, f"metrics_batch_{batch_id:04d}.parquet")
+        if os.path.exists(batch_file):
+            print(f"Skipping existing batch {batch_id}: {batch_file}")
+            batch_files.append(batch_file)
+            continue
 
-    if os.path.exists(batch_file):
-        print(f"Skipping existing batch {batch_id}: {batch_file}")
+        print(f"\nComputing batch {batch_id}: reaches {b0:,} to {b1:,}")
+
+        ds_b = ds_sub.isel(feature_id=keep_pos_all[b0:b1])
+
+        if "streamflow" in ds_b.data_vars:
+            q = ds_b["streamflow"]
+        elif "q" in ds_b.data_vars:
+            q = ds_b["q"]
+        else:
+            raise ValueError("Could not find streamflow variable in NWM Zarr.")
+
+        q_daily = q.resample(time="1D").mean()
+
+        q_mean = q_daily.mean("time").rename("meanQ")
+        q_std = q_daily.std("time").rename("stdQ")
+        CVQ = (q_std / xr.where(q_mean == 0, np.nan, q_mean)).rename("CVQ")
+
+        Q10 = q_daily.quantile(0.10, dim="time").squeeze(drop=True).rename("Q10")
+        Q90 = q_daily.quantile(0.90, dim="time").squeeze(drop=True).rename("Q90")
+
+        q_sum = q_daily.sum("time")
+
+        RBI = (
+            np.abs(q_daily.diff("time")).sum("time") /
+            xr.where(q_sum == 0, np.nan, q_sum)
+        ).rename("RBI")
+
+        q_mclim = q_daily.groupby("time.month").mean("time").chunk({"month": -1})
+
+        q_sorted = xr.apply_ufunc(
+            np.sort,
+            q_mclim,
+            input_core_dims=[["month"]],
+            output_core_dims=[["month"]],
+            dask="parallelized",
+            output_dtypes=[q_mclim.dtype],
+            dask_gufunc_kwargs={"allow_rechunk": True},
+        )
+
+        top3 = q_sorted.isel(month=slice(-3, None)).sum("month")
+        ann = q_mclim.sum("month")
+
+        season_conc = (
+            top3 / xr.where(ann == 0, np.nan, ann)
+        ).rename("season_conc")
+
+        feat_metrics = xr.merge(
+            [q_mean, q_std, CVQ, Q10, Q90, RBI, season_conc],
+            compat="override",
+        )
+
+        with ProgressBar():
+            feat_metrics_df = feat_metrics.compute().to_dataframe().reset_index()
+
+        feat_metrics_df["feature_id"] = feat_metrics_df["feature_id"].astype(np.int64)
+        feat_metrics_df = feat_metrics_df.drop(columns=["quantile"], errors="ignore")
+
+        feat_metrics_df.to_parquet(batch_file, index=False)
         batch_files.append(batch_file)
-        continue
 
-    print(f"\nComputing batch {batch_id}: reaches {b0:,} to {b1:,}")
+        print("Saved batch:", batch_file)
 
-    ds_b = ds_sub.isel(feature_id=keep_pos_all[b0:b1])
+    print("\nCombining metric batches...")
 
-    if "streamflow" in ds_b.data_vars:
-        q = ds_b["streamflow"]
-    elif "q" in ds_b.data_vars:
-        q = ds_b["q"]
-    else:
-        raise ValueError("Could not find streamflow variable in NWM Zarr.")
+    batch_files = sorted([
+        os.path.join(BATCH_DIR, f)
+        for f in os.listdir(BATCH_DIR)
+        if f.startswith("metrics_batch_") and f.endswith(".parquet")
+    ])
 
-    q_daily = q.resample(time="1D").mean()
+    if len(batch_files) == 0:
+        raise RuntimeError("No metric batch files found.")
 
-    q_mean = q_daily.mean("time").rename("meanQ")
-    q_std = q_daily.std("time").rename("stdQ")
-    CVQ = (q_std / xr.where(q_mean == 0, np.nan, q_mean)).rename("CVQ")
-
-    Q10 = q_daily.quantile(0.10, dim="time").squeeze(drop=True).rename("Q10")
-    Q90 = q_daily.quantile(0.90, dim="time").squeeze(drop=True).rename("Q90")
-
-    q_sum = q_daily.sum("time")
-
-    RBI = (
-        np.abs(q_daily.diff("time")).sum("time") /
-        xr.where(q_sum == 0, np.nan, q_sum)
-    ).rename("RBI")
-
-    q_mclim = q_daily.groupby("time.month").mean("time").chunk({"month": -1})
-
-    q_sorted = xr.apply_ufunc(
-        np.sort,
-        q_mclim,
-        input_core_dims=[["month"]],
-        output_core_dims=[["month"]],
-        dask="parallelized",
-        output_dtypes=[q_mclim.dtype],
-        dask_gufunc_kwargs={"allow_rechunk": True},
+    feat_metrics_df = pd.concat(
+        [pd.read_parquet(f) for f in batch_files],
+        ignore_index=True
     )
-
-    top3 = q_sorted.isel(month=slice(-3, None)).sum("month")
-    ann = q_mclim.sum("month")
-
-    season_conc = (
-        top3 / xr.where(ann == 0, np.nan, ann)
-    ).rename("season_conc")
-
-    feat_metrics = xr.merge(
-        [q_mean, q_std, CVQ, Q10, Q90, RBI, season_conc],
-        compat="override",
-    )
-
-    with ProgressBar():
-        feat_metrics_df = feat_metrics.compute().to_dataframe().reset_index()
 
     feat_metrics_df["feature_id"] = feat_metrics_df["feature_id"].astype(np.int64)
-    feat_metrics_df = feat_metrics_df.drop(columns=["quantile"], errors="ignore")
 
-    feat_metrics_df.to_parquet(batch_file, index=False)
-    batch_files.append(batch_file)
+    top_reach_small = top_reach[[id_field, "feature_id"]].copy()
+    top_reach_small["feature_id"] = top_reach_small["feature_id"].astype(np.int64)
 
-    print("Saved batch:", batch_file)
+    feat_metrics_df = feat_metrics_df.merge(top_reach_small, on="feature_id", how="left")
+    feat_metrics_df = feat_metrics_df.dropna(subset=[id_field])
+    feat_metrics_df[id_field] = feat_metrics_df[id_field].astype(np.int64)
 
-print("\nCombining metric batches...")
+    bas_metrics = feat_metrics_df.groupby(id_field).agg({
+        "meanQ": "mean",
+        "stdQ": "mean",
+        "CVQ": "mean",
+        "Q10": "mean",
+        "Q90": "mean",
+        "RBI": "mean",
+        "season_conc": "mean",
+    }).reset_index()
 
-batch_files = sorted([
-    os.path.join(BATCH_DIR, f)
-    for f in os.listdir(BATCH_DIR)
-    if f.startswith("metrics_batch_") and f.endswith(".parquet")
-])
+    bas_metrics.to_csv(HYDRO_OUT, index=False)
+    print("Saved:", HYDRO_OUT)
 
-if len(batch_files) == 0:
-    raise RuntimeError("No metric batch files found.")
-
-feat_metrics_df = pd.concat(
-    [pd.read_parquet(f) for f in batch_files],
-    ignore_index=True
-)
-
-feat_metrics_df["feature_id"] = feat_metrics_df["feature_id"].astype(np.int64)
-
-top_reach_small = top_reach[[id_field, "feature_id"]].copy()
-top_reach_small["feature_id"] = top_reach_small["feature_id"].astype(np.int64)
-
-feat_metrics_df = feat_metrics_df.merge(top_reach_small, on="feature_id", how="left")
-feat_metrics_df = feat_metrics_df.dropna(subset=[id_field])
-feat_metrics_df[id_field] = feat_metrics_df[id_field].astype(np.int64)
-
-bas_metrics = feat_metrics_df.groupby(id_field).agg({
-    "meanQ": "mean",
-    "stdQ": "mean",
-    "CVQ": "mean",
-    "Q10": "mean",
-    "Q90": "mean",
-    "RBI": "mean",
-    "season_conc": "mean",
-}).reset_index()
-
-bas_metrics.to_csv(HYDRO_OUT, index=False)
 print("Saved:", HYDRO_OUT)
 
 
