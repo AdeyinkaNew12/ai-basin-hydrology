@@ -14,7 +14,8 @@ from pathlib import Path
 
 SCRIPTS = [
     "run_groundwater_dc_analysis.py",
-    "run_major_river_proximity.py",
+    # ARCHIVED FIGURE 3 — removed from active run-all workflow:
+    # "run_major_river_proximity.py",
     "run_threshold_water_proximity_ord5.py",
     "run_ecdf_sector_basin_matched.py",
     "run_water_distance_ecdf_allfeatures.py",

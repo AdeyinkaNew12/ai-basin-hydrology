@@ -58,7 +58,7 @@ N_LABELS = 12
 LABEL_MIN_PCT = 0.20
 CANDIDATE_POOL = 80
 
-LABEL_FONTSIZE = 7.4
+LABEL_FONTSIZE = 10.5
 LABEL_WEIGHT = "semibold"
 TEXT_EFFECTS = [pe.withStroke(linewidth=1.2, foreground="white")]
 
@@ -272,14 +272,14 @@ def draw_panel(ax, gdf, color_map, panel_letter, title, total):
         if len(sub) > 0:
             sub.plot(ax=ax, color=color_map[lbl], edgecolor=EDGE_COLOR, linewidth=EDGE_LW)
 
-    ax.text(0.01, 0.99, panel_letter, transform=ax.transAxes,
-            ha="left", va="top", fontsize=9.5, fontweight="normal")
+    ax.text(0.03, 0.97, panel_letter, transform=ax.transAxes,
+            ha="left", va="top", fontsize=10.5, fontweight="normal")
     ax.set_title(title, fontsize=17, fontweight="bold", pad=10)
 
     place_labels_bbox(ax, gdf, N_LABELS, LABEL_MIN_PCT, CANDIDATE_POOL)
 
     ax.text(0.99, 0.01, f"N={total:,}", transform=ax.transAxes,
-            ha="right", va="bottom", fontsize=9)
+            ha="right", va="bottom", fontsize=10.5)
     ax.set_axis_off()
 
 layers = fiona.listlayers(HUC_FILE)
@@ -329,11 +329,11 @@ draw_panel(axes[1], m_pwr, orng_map, "b", "Power Facilities", tot_pwr)
 draw_panel(axes[2], m_tri, grn_map,  "c", "TRI Facilities",   tot_tri)
 
 axes[0].legend(handles=legend_handles(blue_map), title="Share of national facilities (%)",
-               loc="upper center", bbox_to_anchor=(0.5, -0.08), ncol=3, frameon=False, fontsize=9, title_fontsize=9)
+               loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=3, frameon=False, fontsize=10.5, title_fontsize=10.5)
 axes[1].legend(handles=legend_handles(orng_map), title="Share of national facilities (%)",
-               loc="upper center", bbox_to_anchor=(0.5, -0.08), ncol=3, frameon=False, fontsize=9, title_fontsize=9)
+               loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=3, frameon=False, fontsize=10.5, title_fontsize=10.5)
 axes[2].legend(handles=legend_handles(grn_map),  title="Share of national facilities (%)",
-               loc="upper center", bbox_to_anchor=(0.5, -0.08), ncol=3, frameon=False, fontsize=9, title_fontsize=9)
+               loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=3, frameon=False, fontsize=10.5, title_fontsize=10.5)
 
 plt.subplots_adjust(bottom=0.24, wspace=0.08)
 plt.savefig(OUT_FIG, dpi=600, bbox_inches="tight", pad_inches=0.10)
