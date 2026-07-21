@@ -30,3 +30,4 @@ nwm_run_*.log
 FIG_*.png
 WaterProximity_threshold_plot_panels_ORD5.png
 results/
+figures/
