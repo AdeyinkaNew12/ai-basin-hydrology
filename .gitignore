@@ -31,3 +31,5 @@ FIG_*.png
 WaterProximity_threshold_plot_panels_ORD5.png
 results/
 figures/
+*.backup_before_*
+*.bak_*
