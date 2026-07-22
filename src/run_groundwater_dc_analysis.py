@@ -786,27 +786,7 @@ fig.tight_layout()
 save_fig(fig, "GroundwaterDC_01_pathway_classification.png", dpi=400)
 plt.close(fig)
 
-# Figure 2: Reservoir/lake distance distribution
-reservoir_dist = pd.to_numeric(dc_unique["dist_to_reservoir_km"], errors="coerce").dropna()
-fig2_csv = os.path.join(TABLEDIR, "GroundwaterDC_reservoir_lake_distance_summary.csv")
-pd.DataFrame({
-    "metric": ["count", "mean_km", "median_km", "min_km", "max_km"],
-    "value": [reservoir_dist.count(), reservoir_dist.mean(), reservoir_dist.median(), reservoir_dist.min(), reservoir_dist.max()],
-}).to_csv(fig2_csv, index=False)
-
-fig, ax = plt.subplots(figsize=(8.5, 5.2))
-ax.hist(reservoir_dist, bins=30)
-ax.set_xlabel("Distance to nearest reservoir or lake (km)")
-ax.set_ylabel("Number of AI data centers")
-ax.grid(alpha=0.20)
-fig.tight_layout()
-save_fig(fig, "GroundwaterDC_02_reservoir_lake_distance_distribution.png", dpi=400)
-plt.close(fig)
-
-# Aquifer-enrichment and HUC8 sector-composition figures were archived and removed from the active workflow.
-
-# Figure 4 archived: HUC8 sector-composition figure removed.
-plt.close(fig)
+# Reservoir/lake distance, aquifer-enrichment, and HUC8 sector-composition figures were archived and removed from the active workflow.
 
 # -------------------------
 # 20. WRITE SUMMARY REPORT
