@@ -803,9 +803,60 @@ fig.tight_layout()
 save_fig(fig, "GroundwaterDC_02_reservoir_lake_distance_distribution.png", dpi=400)
 plt.close(fig)
 
-# Aquifer-enrichment and HUC8 sector-composition figures were archived and removed from the active workflow.
+# Figure 3: Aquifer enrichment ratio
+aq_plot = aq_enrichment_nonzero.replace([np.inf, -np.inf], np.nan).dropna(subset=["enrichment_ratio"]).copy()
+aq_plot = aq_plot.sort_values("enrichment_ratio", ascending=True).tail(10)
+fig3_csv = os.path.join(TABLEDIR, "GroundwaterDC_aquifer_enrichment_ratio.csv")
+aq_plot.to_csv(fig3_csv, index=False)
 
-# Figure 4 archived: HUC8 sector-composition figure removed.
+fig, ax = plt.subplots(figsize=(9.5, 6.2))
+ax.barh(wrap_labels(aq_plot["AQUIFER_NAME"], width=34), aq_plot["enrichment_ratio"])
+ax.set_xlabel("Enrichment ratio of AI data-center occurrence")
+ax.set_ylabel("Aquifer system")
+ax.grid(axis="x", alpha=0.20)
+fig.tight_layout()
+save_fig(fig, "GroundwaterDC_03_aquifer_enrichment_ratio.png", dpi=400)
+plt.close(fig)
+
+# Figure 4: Sector composition in top HUC8 basins
+sector_cols = {
+    "PS_share": "Public supply",
+    "DO_share": "Domestic",
+    "IN_share": "Industrial",
+    "IR_share": "Irrigation",
+}
+
+fig4_data = master_huc8_table[master_huc8_table["has_dc"]].copy()
+fig4_data = fig4_data.sort_values(["dc_count", "selected_total_MGD"], ascending=[False, False]).head(15)
+
+available = {col: label for col, label in sector_cols.items() if col in fig4_data.columns}
+if len(available) == 0:
+    raise ValueError(f"No sector-share columns found. Columns: {list(master_huc8_table.columns)}")
+
+fig4_csv = os.path.join(TABLEDIR, "GroundwaterDC_top_HUC8_sector_composition.csv")
+fig4_data[["HUC8", "HUC8_NAME", "dc_count"] + list(available.keys())].to_csv(fig4_csv, index=False)
+
+fig, ax = plt.subplots(figsize=(10.5, 6.2))
+
+x = np.arange(len(fig4_data))
+bottom = np.zeros(len(fig4_data))
+
+for col, label in available.items():
+    vals = pd.to_numeric(fig4_data[col], errors="coerce").fillna(0).values
+    ax.bar(x, vals, bottom=bottom, label=label)
+    bottom += vals
+
+labels = fig4_data["HUC8_NAME"].astype(str)
+ax.set_xticks(x)
+ax.set_xticklabels(wrap_labels(labels, width=22), rotation=75, ha="right")
+
+ax.set_ylabel("Sector share")
+ax.set_xlabel("Top HUC8 basins containing AI data centers")
+ax.legend(frameon=True, loc="lower left")
+ax.grid(axis="y", alpha=0.20)
+
+fig.tight_layout()
+save_fig(fig, "GroundwaterDC_04_sector_composition_top_HUC8_basins.png", dpi=400)
 plt.close(fig)
 
 # -------------------------

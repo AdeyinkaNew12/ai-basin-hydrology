@@ -14,7 +14,8 @@ src/
 ├── run_all.py
 ├── run_integrated_dc_water_pathways.py
 ├── run_major_river_proximity.py
-├── run_threshold_water_proximity_ord5.py
+├── archive/
+│   └── run_threshold_water_proximity_ord5.py  # archived; not part of active workflow
 ├── run_water_distance_ecdf_allfeatures.py
 ├── run_huc2_facility_share_map.py
 ├── run_nwm_hydroregime.py
