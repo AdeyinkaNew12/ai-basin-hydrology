@@ -302,7 +302,6 @@ else:
 pwr = load_points_any(POWER_FILE, "Power", force_lat="Latitude", force_lon="Longitude")
 
 fac_all = []
-basins_by_sector = {}
 
 for gdf in [ai, pwr, tri]:
     sec = gdf["sector"].iloc[0]
@@ -315,13 +314,12 @@ for gdf in [ai, pwr, tri]:
     joined = joined.dropna(subset=["pfaf_id_lev08","stress_value","stress_tertile","stress_quartile"]).copy()
     joined["sector"] = sec
     fac_all.append(joined)
-    basins_by_sector[sec] = joined["pfaf_id_lev08"].astype("Int64").dropna().unique()
 
 fac = pd.concat(fac_all, ignore_index=True)
 
 def run_mode(mode_name):
     mode = mode_name.upper()
-    if mode not in ["ALL_BASINS"]:
+    if mode != "ALL_BASINS":
         raise ValueError("mode must be 'ALL_BASINS'")
 
     OUT_FIG    = OUT_DIR / f"analysis4_fig_{mode}_tertiles_quartiles_3x2.png"
@@ -339,27 +337,64 @@ def run_mode(mode_name):
             continue
 
         poly = bas_stress.copy()
-        if mode == "BASIN_MATCHED":
-            use_ids = set(basins_by_sector[sec].tolist())
-            poly = bas_stress[bas_stress["PFAF_ID"].isin(use_ids)].copy()
 
-        pool_n = int(min(POOL_CAP, max(N + 1000, np.ceil(POOL_FACTOR * N))))
-        seed = BASE_SEED + SEED_MAP.get(sec, 999) + MODE_SEED[mode]
+        pool_n = int(
+            min(
+                POOL_CAP,
+                max(N + 1000, np.ceil(POOL_FACTOR * N)),
+            )
+        )
 
-        pool = generate_random_points_in_polygonset(poly, n=pool_n, seed=seed)
+        seed = (
+            BASE_SEED
+            + SEED_MAP.get(sec, 999)
+            + MODE_SEED[mode]
+        )
+
+        pool = generate_random_points_in_polygonset(
+            poly,
+            n=pool_n,
+            seed=seed,
+        )
+
         poolj = safe_sjoin(
             pool,
-            bas_stress[["PFAF_ID","stress_value","stress_tertile","stress_quartile","geometry"]],
-            how="left", predicate="within"
-        ).rename(columns={"PFAF_ID":"pfaf_id_lev08"})
+            bas_stress[
+                [
+                    "PFAF_ID",
+                    "stress_value",
+                    "stress_tertile",
+                    "stress_quartile",
+                    "geometry",
+                ]
+            ],
+            how="left",
+            predicate="within",
+        ).rename(columns={"PFAF_ID": "pfaf_id_lev08"})
 
-        pool_valid = poolj.dropna(subset=["stress_value","stress_tertile","stress_quartile"]).copy()
-        pool_valid = stable_sort_for_repro(pool_valid)
+        pool_valid = poolj.dropna(
+            subset=[
+                "stress_value",
+                "stress_tertile",
+                "stress_quartile",
+            ]
+        ).copy()
 
         if len(pool_valid) < N:
-            raise RuntimeError(f"{sec} ({mode}): pool_valid={len(pool_valid)} < N={N}. Increase POOL_FACTOR/POOL_CAP.")
+            raise RuntimeError(
+                f"{sec} ({mode}): pool_valid={len(pool_valid)} "
+                f"< N={N}. Increase POOL_FACTOR/POOL_CAP."
+            )
 
-        rnd = pool_valid.iloc[:N].copy()
+        # Randomly retain N valid reference locations.
+        rnd = pool_valid.sample(
+            n=N,
+            replace=False,
+            random_state=seed,
+        ).copy()
+
+        # Sort only after random selection for reproducible file ordering.
+        rnd = stable_sort_for_repro(rnd)
         rnd["sector"] = sec
         rand_rows.append(rnd)
 
@@ -663,7 +698,11 @@ def run_mode(mode_name):
 
     return str(OUT_FIG), str(OUT_JOINED), str(OUT_RANDOM), str(OUT_STATS), stats_df
 
-fig_g, join_g, rand_g, stats_g, df_g = run_mode("ALL_BASINS")
-# Basin-matched baseline removed for final run
+# Primary inference is the direct comparison among AI, Power, and TRI.
+# The ALL_BASINS analysis is retained as a secondary national null model.
+fig_all, join_all, rand_all, stats_all, df_all = run_mode("ALL_BASINS")
 
-df_g
+# Exact Level-8 basin matching is not used for water-stress inference
+# because stress values and categories are constant within each basin.
+# Matching observed and random locations within the same basin therefore
+# produces identical category distributions by construction.
