@@ -15,8 +15,9 @@ from pathlib import Path
 SCRIPTS = [
     "run_groundwater_dc_analysis.py",
     # ARCHIVED FIGURE 3 — removed from active run-all workflow:
-    "run_water_distance_ecdf_allfeatures.py",
+    # Retired and archived: "run_water_distance_ecdf_allfeatures.py",
     "run_huc2_facility_share_map.py",
+    "run_ecdf_all_water_features.py",
     "run_nwm_hydroregime_recomputed_journal.py",
     "run_water_stress_siting.py",
 ]
