@@ -456,6 +456,208 @@ def run_mode(mode_name):
     fig.savefig(OUT_FIG, dpi=350, bbox_inches="tight", pad_inches=0.20)
     plt.show()
 
+
+    # DIRECT_SECTOR_COMPARISON_START
+    # ============================================================
+    # Direct comparison among AI, Power, and TRI facilities
+    #
+    # Test 1: Full stress distribution
+    #         Low vs Medium vs High
+    #
+    # Test 2: High water stress vs Not High
+    # ============================================================
+
+    direct_rows = []
+
+    for sec in SECTORS:
+        sec_data = fac.loc[
+            (fac["sector"] == sec)
+            & fac["stress_tertile"].notna()
+        ].copy()
+
+        low_n = int((sec_data["stress_tertile"] == "low").sum())
+        medium_n = int((sec_data["stress_tertile"] == "medium").sum())
+        high_n = int((sec_data["stress_tertile"] == "high").sum())
+
+        not_high_n = low_n + medium_n
+        total_n = low_n + medium_n + high_n
+
+        direct_rows.append({
+            "Mode": mode,
+            "Sector": sec,
+            "Low": low_n,
+            "Medium": medium_n,
+            "High": high_n,
+            "Not_high": not_high_n,
+            "Total": total_n,
+            "Low_percent": (
+                100.0 * low_n / total_n if total_n else np.nan
+            ),
+            "Medium_percent": (
+                100.0 * medium_n / total_n if total_n else np.nan
+            ),
+            "High_percent": (
+                100.0 * high_n / total_n if total_n else np.nan
+            ),
+        })
+
+    direct_df = pd.DataFrame(direct_rows)
+
+    # Full 3 sectors x 3 stress categories test
+    table_full = direct_df[
+        ["Low", "Medium", "High"]
+    ].to_numpy()
+
+    chi2_full, p_full, dof_full, expected_full = chi2_contingency(
+        table_full
+    )
+
+    n_full = int(table_full.sum())
+    denominator_full = n_full * min(
+        table_full.shape[0] - 1,
+        table_full.shape[1] - 1,
+    )
+
+    cramers_v_full = (
+        np.sqrt(chi2_full / denominator_full)
+        if denominator_full > 0
+        else np.nan
+    )
+
+    # High versus Not High test
+    table_high = direct_df[
+        ["High", "Not_high"]
+    ].to_numpy()
+
+    chi2_high, p_high, dof_high, expected_high = chi2_contingency(
+        table_high
+    )
+
+    n_high = int(table_high.sum())
+    denominator_high = n_high * min(
+        table_high.shape[0] - 1,
+        table_high.shape[1] - 1,
+    )
+
+    cramers_v_high = (
+        np.sqrt(chi2_high / denominator_high)
+        if denominator_high > 0
+        else np.nan
+    )
+
+    print("\n" + "=" * 74)
+    print("DIRECT WATER-STRESS COMPARISON: AI vs POWER vs TRI")
+    print("=" * 74)
+
+    print(
+        direct_df[
+            [
+                "Sector",
+                "Low",
+                "Medium",
+                "High",
+                "Not_high",
+                "Total",
+                "High_percent",
+            ]
+        ].to_string(
+            index=False,
+            formatters={
+                "High_percent": lambda value: f"{value:.2f}%"
+            },
+        )
+    )
+
+    print("\nFull distribution: Low vs Medium vs High")
+    print(table_full)
+    print(f"Chi-square = {chi2_full:.4f}")
+    print(f"Degrees of freedom = {dof_full}")
+    print(f"P-value = {p_full:.10g}")
+    print(f"Cramer's V = {cramers_v_full:.4f}")
+
+    if p_full < 0.05:
+        print(
+            "Result: Overall water-stress distributions differ "
+            "significantly among sectors."
+        )
+    else:
+        print(
+            "Result: Overall water-stress distributions do not "
+            "differ significantly among sectors."
+        )
+
+    print("\nHigh water stress vs Not High")
+    print(table_high)
+    print(f"Chi-square = {chi2_high:.4f}")
+    print(f"Degrees of freedom = {dof_high}")
+    print(f"P-value = {p_high:.10g}")
+    print(f"Cramer's V = {cramers_v_high:.4f}")
+
+    if p_high < 0.05:
+        print(
+            "Result: High water-stress proportions differ "
+            "significantly among sectors."
+        )
+    else:
+        print(
+            "Result: High water-stress proportions do not differ "
+            "significantly among sectors."
+        )
+
+    if cramers_v_high < 0.10:
+        print("Effect size for High vs Not High: very small.")
+    elif cramers_v_high < 0.30:
+        print("Effect size for High vs Not High: small.")
+    elif cramers_v_high < 0.50:
+        print("Effect size for High vs Not High: moderate.")
+    else:
+        print("Effect size for High vs Not High: large.")
+
+    # Add statistics to the sector table
+    direct_df["Chi2_full_distribution"] = float(chi2_full)
+    direct_df["df_full_distribution"] = int(dof_full)
+    direct_df["p_full_distribution"] = float(p_full)
+    direct_df["Cramers_V_full_distribution"] = float(
+        cramers_v_full
+    )
+
+    direct_df["Chi2_high_vs_not_high"] = float(chi2_high)
+    direct_df["df_high_vs_not_high"] = int(dof_high)
+    direct_df["p_high_vs_not_high"] = float(p_high)
+    direct_df["Cramers_V_high_vs_not_high"] = float(
+        cramers_v_high
+    )
+
+    direct_df["High_test_significant_0.05"] = bool(
+        p_high < 0.05
+    )
+
+    OUT_DIRECT = (
+        OUT_DIR
+        / f"analysis4_direct_sector_water_stress_{mode}.csv"
+    )
+
+    direct_df.to_csv(OUT_DIRECT, index=False)
+
+    print(f"\nSaved direct sector results: {OUT_DIRECT}")
+
+    # Add a summary row to the existing statistics CSV
+    stats_rows.append({
+        "Mode": mode,
+        "Sector": "AI_vs_Power_vs_TRI",
+        "N_with_stress": int(n_high),
+        "Chi2_direct_full": float(chi2_full),
+        "df_direct_full": int(dof_full),
+        "p_direct_full": float(p_full),
+        "Cramers_V_direct_full": float(cramers_v_full),
+        "Chi2_direct_high": float(chi2_high),
+        "df_direct_high": int(dof_high),
+        "p_direct_high": float(p_high),
+        "Cramers_V_direct_high": float(cramers_v_high),
+    })
+
+    # DIRECT_SECTOR_COMPARISON_END
+
     stats_df = pd.DataFrame(stats_rows)
     stats_df.to_csv(OUT_STATS, index=False)
 
