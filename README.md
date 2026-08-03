@@ -1,7 +1,7 @@
 
 # AI Infrastructure and Basin-Scale Hydrology
 
-[![DOI](https://zenodo.org/badge/1217127610.svg)](https://doi.org/10.5281/zenodo.21780880)
+[![DOI](https://zenodo.org/badge/1217127610.svg)](https://doi.org/10.5281/zenodo.21781070)
 
 ## Hydrographic Analysis of AI Data-Center Siting Patterns in the Contiguous United States
 
