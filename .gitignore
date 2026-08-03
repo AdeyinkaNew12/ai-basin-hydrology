@@ -33,3 +33,14 @@ results/
 figures/
 *.backup_before_*
 *.bak_*
+
+# Retired NWM figures no longer generated for the main manuscript
+**/FIG_1_NWM_HydroRegime_ECDF*.png
+**/FIG_1_NWM_HydroRegime_ECDF*.pdf
+**/FIG_3_NWM_HydroRegime_CombinedSectors*.png
+**/FIG_3_NWM_HydroRegime_CombinedSectors*.pdf
+
+# Retired water-distance ECDF outputs
+**/WaterDistance_ECDF_allfeatures*.png
+**/WaterDistance_ECDF_allfeatures*.pdf
+archive/
