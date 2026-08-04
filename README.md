@@ -1,4 +1,3 @@
-
 # AI Infrastructure and Basin-Scale Hydrology
 
 [![DOI](https://zenodo.org/badge/1217127610.svg)](https://doi.org/10.5281/zenodo.21781070)
@@ -17,9 +16,9 @@ The analyses quantify infrastructure proximity to rivers, lakes, coastlines, and
 src/
 ├── common_paths.py
 ├── run_all.py
-├── run_integrated_dc_water_pathways.py
-├── run_major_river_proximity.py
-├── run_water_distance_ecdf_allfeatures.py
+├── run_ecdf_all_water_features.py
+├── run_ecdf_sector_basin_matched.py
+├── run_groundwater_dc_analysis.py
 ├── run_huc2_facility_share_map.py
 ├── run_nwm_hydroregime_recomputed_journal.py
 ├── run_nwm_ecdf_matched_random.py
@@ -72,11 +71,7 @@ The workflow executes all production analyses sequentially.
 
 ### Integrated Data-Center Water Pathways
 
-Evaluates relationships among AI data centers, aquifers, counties, HUC8 watersheds, major rivers, reservoirs, and water-supply pathways.
-
-### Major River Proximity Analysis
-
-Quantifies distances between AI facilities, thermoelectric power plants, and TRI facilities to major rivers (ORD_STRA ≥ 5) using basin-matched reference locations.
+Evaluates relationships among AI data centers, aquifers, counties, HUC8 watersheds, reservoirs, and water-supply pathways.
 
 ### Surface-Water Proximity Analysis
 
@@ -92,7 +87,7 @@ Calculates basin-scale hydrologic signatures from NOAA National Water Model stre
 
 ### NWM ECDF Matched-Random Comparisons
 
-Produces ECDF comparisons between infrastructure sectors and matched-random reference locations, including statistical comparisons of hydrologic signatures and water-feature distance distributions.
+Produces ECDF comparisons between infrastructure sectors and matched-random reference locations, including statistical comparisons of hydrologic signatures.
 
 ### Water-Stress Siting Analysis
 
@@ -108,7 +103,7 @@ The workflow generates five production figures used for manuscript preparation:
    Script: `run_huc2_facility_share_map.py`
 
 2. **Figure 2 — ECDF comparisons of water-feature distances**  
-   Script: `run_water_distance_ecdf_allfeatures.py`
+   Script: `run_ecdf_all_water_features.py`
 
 3. **Figure 3 — Matched-baseline hydrologic signature effect sizes**  
    Script: `run_nwm_hydroregime_recomputed_journal.py`
@@ -117,7 +112,7 @@ The workflow generates five production figures used for manuscript preparation:
    Script: `run_water_stress_siting.py`
 
 5. **Figure 5 — Water-source pathway classification**  
-   Script: `run_integrated_dc_water_pathways.py`
+   Script: `run_integrated_dc_water_paths.py`
 
 ---
 
@@ -126,7 +121,6 @@ The workflow generates five production figures used for manuscript preparation:
 ```text
 results/
 ├── integrated_dc_water_pathways/
-├── major_river_proximity/
 ├── water_distance_ecdf_allfeatures/
 ├── huc2_facility_share_map/
 ├── nwm_hydroregime/
