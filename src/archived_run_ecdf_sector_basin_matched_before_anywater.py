@@ -48,23 +48,7 @@ PROJECT_DIR = DEFAULT_DATA_ROOT
 OUT_DIR = DEFAULT_OUTPUT_ROOT
 os.makedirs(OUT_DIR, exist_ok=True)
 
-COL = os.environ.get(
-    "ECDF_DISTANCE_COL",
-    "dist_river_km",
-)
-
-VALID_DISTANCE_COLUMNS = {
-    "dist_river_km",
-    "dist_lake_km",
-    "dist_coast_km",
-    "dist_any_km",
-}
-
-if COL not in VALID_DISTANCE_COLUMNS:
-    raise ValueError(
-        f"Unsupported ECDF_DISTANCE_COL={COL!r}. "
-        f"Choose from {sorted(VALID_DISTANCE_COLUMNS)}."
-    )
+COL = 'dist_any_km'
 SECTORS = ['AI', 'Power', 'TRI']
 
 SEC_COLORS = {'AI': '#1f77b4', 'Power': '#2ca02c', 'TRI': '#9467bd'}
@@ -92,7 +76,7 @@ def ecdf(a):
 def clean_vec(s):
     v = pd.to_numeric(pd.Series(s), errors='coerce').to_numpy(float)
     v = v[np.isfinite(v)]
-    v = v[v >= 0]
+    v = v[v > 0]
     return v
 
 def load_dist(sec, grp):
@@ -117,26 +101,8 @@ def load_dist(sec, grp):
 
     df = pd.read_csv(f, low_memory=False)
 
-    if COL == "dist_any_km" and COL not in df.columns:
-        required = ["dist_river_km", "dist_lake_km", "dist_coast_km"]
-        missing = [c for c in required if c not in df.columns]
-
-        if missing:
-            raise KeyError(
-                f"{f} cannot calculate '{COL}'; missing columns: {missing}"
-            )
-
-        # Distance to the nearest mapped water feature.
-        df[COL] = (
-            df[required]
-            .apply(pd.to_numeric, errors="coerce")
-            .min(axis=1, skipna=True)
-        )
-
-    elif COL not in df.columns:
-        raise KeyError(
-            f"{f} missing '{COL}'. Has: {list(df.columns)[:30]}"
-        )
+    if COL not in df.columns:
+        raise KeyError(f"{f} missing '{COL}'. Has: {list(df.columns)[:30]}")
 
     return clean_vec(df[COL])
 

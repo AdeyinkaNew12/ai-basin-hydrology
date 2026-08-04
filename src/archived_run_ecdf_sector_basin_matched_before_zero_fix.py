@@ -92,7 +92,7 @@ def ecdf(a):
 def clean_vec(s):
     v = pd.to_numeric(pd.Series(s), errors='coerce').to_numpy(float)
     v = v[np.isfinite(v)]
-    v = v[v >= 0]
+    v = v[v > 0]
     return v
 
 def load_dist(sec, grp):
