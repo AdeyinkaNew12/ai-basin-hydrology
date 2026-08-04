@@ -1,15 +1,19 @@
 # Hydrographic and Hydrologic Analysis of AI Data-Center Siting Patterns in the Contiguous United States
 
-This repository contains reproducible Python workflows for evaluating hydrographic, hydrologic, and water-stress characteristics associated with artificial intelligence (AI) data-center locations across the contiguous United States (CONUS).
+This repository contains the reproducible Python workflows supporting the analysis of hydrographic, hydrologic, and water-stress characteristics associated with artificial intelligence (AI) data-center siting across the contiguous United States (CONUS).
 
-The workflow integrates AI data-center locations with national hydrographic datasets, hydrologic simulations, water-stress indicators, aquifer information, and industrial infrastructure datasets to characterize relationships between digital infrastructure and freshwater systems.
+The archived software release is available through Zenodo:
 
-The analyses evaluate:
+https://doi.org/10.5281/zenodo.21795410
 
-- infrastructure proximity to rivers, lakes, coastlines, and surface-water features;
-- watershed-scale hydrologic characteristics using NOAA National Water Model metrics;
-- water-supply pathway classifications;
-- basin-level water-stress conditions; and
+The workflow integrates AI data-center locations with hydrographic datasets, hydrologic simulations, water-stress indicators, aquifer information, and industrial infrastructure datasets to evaluate relationships between digital infrastructure and freshwater systems.
+
+The analyses include:
+
+- surface-water proximity analysis (rivers, lakes, coastlines, and nearest surface-water features);
+- watershed hydrologic characterization using NOAA National Water Model metrics;
+- water-supply pathway classification;
+- basin-level water-stress analysis; and
 - comparisons among AI data centers, thermoelectric power plants, and Toxic Release Inventory (TRI) facilities.
 
 ---
@@ -37,21 +41,14 @@ Clone the repository:
 
 ```bash
 git clone https://github.com/AdeyinkaNew12/ai-basin-hydrology.git
-
 cd ai-basin-hydrology
 ```
 
-Create and activate a Python environment:
+Create an environment and install dependencies:
 
 ```bash
 python3 -m venv venv
-
 source venv/bin/activate
-```
-
-Install required packages:
-
-```bash
 pip install -r requirements.txt
 ```
 
@@ -59,125 +56,101 @@ pip install -r requirements.txt
 
 ## Data Configuration
 
-Input and output directories are controlled through:
+Input and output paths are configured in:
 
 ```
 src/common_paths.py
 ```
 
-Update the directory paths to match local data locations before running analyses.
+Original external datasets are not included because of data licensing restrictions and file-size limitations. Users should obtain the required datasets from their respective providers.
 
-Due to dataset licensing restrictions and file sizes, original external datasets are not included in this repository. Users must obtain required datasets from their respective providers.
+Required datasets include:
 
-Datasets used in this workflow include:
-
-- HydroBASINS and HydroRIVERS hydrographic datasets
-- HydroLAKES surface-water dataset
-- World Resources Institute (WRI) Aqueduct 4.0 water-stress indicators
+- HydroBASINS, HydroRIVERS, and HydroLAKES
+- WRI Aqueduct 4.0 water-stress indicators
 - NOAA National Water Model retrospective streamflow simulations
 - National aquifer datasets
-- EPA Toxic Release Inventory (TRI) data
+- EPA Toxic Release Inventory (TRI)
 - EIA thermoelectric power plant data
 
 ---
 
 ## Running the Workflow
 
-Execute the complete production workflow:
+Run all production analyses:
 
 ```bash
 python src/run_all.py
 ```
 
-Individual analyses can also be executed separately using scripts contained in the `src/` directory.
+Individual analyses can also be executed using scripts in the `src/` directory.
 
 ---
 
-# Analyses Included
+## Analysis Workflows
 
-## Surface-Water Proximity Analysis
+### Surface-Water Proximity Analysis
 
-**Script**
+Script:
 
 ```
 run_water_distance_ecdf_allfeatures.py
 ```
 
-Evaluates infrastructure proximity to rivers, lakes, coastlines, and nearest surface-water features using empirical cumulative distribution functions (ECDFs), statistical comparisons, and basin-matched random baselines.
+Generates ECDF comparisons of infrastructure proximity to rivers, lakes, coastlines, and nearest surface-water features using basin-matched random baselines.
 
 ---
 
-## Water-Supply Pathway Classification
+### Water-Supply Pathway Classification
 
-**Script**
+Script:
 
 ```
 run_groundwater_dc_analysis.py
 ```
 
-Characterizes potential water-supply pathways associated with AI data centers using surface-water, groundwater, and mixed pathway classifications.
+Classifies AI data-center locations according to potential surface-water, groundwater, and mixed water-supply pathways.
 
 ---
 
-## Basin-Level Facility Distribution Mapping
+### Hydrologic Regime Analysis
 
-**Script**
-
-```
-run_huc2_facility_share_map.py
-```
-
-Generates basin-scale comparisons of AI data centers, thermoelectric power plants, and TRI facilities across water-stress categories.
-
----
-
-## National Water Model Hydrologic Analysis
-
-**Scripts**
+Scripts:
 
 ```
 run_nwm_hydroregime_recomputed_journal.py
-
 run_nwm_ecdf_matched_random.py
 ```
 
-Quantifies watershed hydrologic characteristics using NOAA National Water Model streamflow metrics, including:
-
-- runoff stability (RBI);
-- seasonal concentration; and
-- coefficient of variation of discharge (CVQ).
-
-Infrastructure-associated watersheds are compared with matched baseline watersheds.
+Calculates watershed-scale hydrologic characteristics from NOAA National Water Model streamflow metrics.
 
 ---
 
-## Water-Stress Siting Analysis
+### Water-Stress Analysis
 
-**Script**
+Script:
 
 ```
 run_water_stress_siting.py
 ```
 
-Evaluates whether AI data centers, thermoelectric power plants, and TRI facilities exhibit different distributions across basin-level water-stress categories using Aqueduct 4.0 indicators and statistical comparisons.
+Evaluates infrastructure distributions across basin-level water-stress categories.
 
 ---
 
-# Production Figures
-
-The workflow generates the production figures used for manuscript preparation.
+## Production Figures
 
 | Figure | Description | Script |
 |---|---|---|
-| Figure 1 | Infrastructure distribution across basin-level water-stress categories | `run_huc2_facility_share_map.py` |
-| Figure 2 | ECDF comparisons of infrastructure proximity to water features | `run_water_distance_ecdf_allfeatures.py` |
-| Figure 3 | Hydrologic regime comparison using matched-baseline effect sizes | `run_nwm_hydroregime_recomputed_journal.py` |
-| Figure 4 | Basin-scale water-stress distribution comparisons | `run_water_stress_siting.py` |
+| Figure 1 | Basin-level infrastructure distribution across water-stress categories | `run_huc2_facility_share_map.py` |
+| Figure 2 | ECDF comparisons of water-feature distances | `run_water_distance_ecdf_allfeatures.py` |
+| Figure 3 | Hydrologic regime comparison | `run_nwm_hydroregime_recomputed_journal.py` |
+| Figure 4 | Water-stress distribution comparison | `run_water_stress_siting.py` |
 | Figure 5 | Water-supply pathway classification | `run_groundwater_dc_analysis.py` |
 
 ---
 
-# Output Structure
+## Output Structure
 
 ```
 results/
@@ -191,10 +164,8 @@ results/
 
 ---
 
-# Reproducibility
+## Reproducibility
 
-All production analyses are implemented through Python scripts contained in the `src/` directory.
-
-The workflow provides the computational framework required to reproduce hydrographic, hydrologic, and water-stress analyses of AI infrastructure siting across the contiguous United States.
+All production workflows are implemented as Python scripts in the `src/` directory. This repository provides the computational framework required to reproduce the hydrographic, hydrologic, and water-stress analyses of AI infrastructure siting across CONUS.
 
 Archived scripts are retained for documentation purposes and are not required for the production workflow.
