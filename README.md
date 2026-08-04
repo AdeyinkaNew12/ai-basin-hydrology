@@ -111,8 +111,9 @@ The workflow generates five production figures used for manuscript preparation:
 4. **Figure 4 — Basin-scale water-stress distribution comparisons**  
    Script: `run_water_stress_siting.py`
 
-5. **Figure 5 — Water-source pathway classification**  
-   Script: `run_integrated_dc_water_paths.py`
+5. **Figure 5 — Water-source pathway classification**
+   Script: `run_groundwater_dc_analysis.py`
+  
 
 ---
 
