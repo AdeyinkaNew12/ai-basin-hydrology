@@ -168,4 +168,3 @@ results/
 
 All production workflows are implemented as Python scripts in the `src/` directory. This repository provides the computational framework required to reproduce the hydrographic, hydrologic, and water-stress analyses of AI infrastructure siting across CONUS.
 
-Archived scripts are retained for documentation purposes and are not required for the production workflow.
