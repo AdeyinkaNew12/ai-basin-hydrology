@@ -493,7 +493,7 @@ def run_mode(mode_name):
 
     fig.suptitle(
         "MAIN: Basin-scale water-stress siting (ALL BASINS random baseline)\n"
-        "Stress: Aqueduct bws_01_raw via HydroBASINS PFAF6 | Bins: ALL BASINS quantiles | Random N matched per sector",
+        "Stress: Aqueduct 4.0 annual baseline water stress via HydroBASINS Level 6 | Bins: ALL BASINS quantiles | Random N matched per sector",
         y=0.98, fontsize=14, fontweight="semibold"
     )
 
