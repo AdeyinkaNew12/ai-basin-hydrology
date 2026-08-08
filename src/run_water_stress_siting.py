@@ -418,9 +418,9 @@ def run_mode(mode_name):
     fig.subplots_adjust(left=0.11, right=0.99, top=0.90, bottom=0.10, wspace=0.12, hspace=0.30)
 
     try:
-        fig.supylabel("Proportion of facilities", x=0.04, fontsize=13, fontweight="semibold")
+        fig.supylabel("Proportion of facilities", x=0.055, fontsize=13, fontweight="semibold")
     except Exception:
-        fig.text(0.04, 0.5, "Proportion of facilities", va="center", rotation="vertical", fontsize=13, fontweight="semibold")
+        fig.text(0.055, 0.5, "Proportion of facilities", va="center", rotation="vertical", fontsize=13, fontweight="semibold")
 
     for r in range(3):
         axes[r, 1].tick_params(labelleft=False)
@@ -443,7 +443,7 @@ def run_mode(mode_name):
         c = int(rnd3["high"]); d = int(rnd3["low"] + rnd3["medium"])
         ORh, ORh_lo, ORh_hi = odds_ratio_2x2(a,b,c,d)
 
-        plot_grouped_percent_only(axes[i,0], order3, obs3, rnd3, COL3, f"{sec}: Stress tertiles ({mode})")
+        plot_grouped_percent_only(axes[i,0], order3, obs3, rnd3, COL3, f"{sec}: Stress tertiles")
         axes[i,0].text(
             0.02, 0.98,
             f"$\\chi^2$={chi2_3:.1f}, p={p_3:.1e}\nOR(high)={ORh:.2f} [{ORh_lo:.2f},{ORh_hi:.2f}]",
@@ -460,7 +460,7 @@ def run_mode(mode_name):
         c4 = int(rnd4["Q4"]); d4 = int(rnd4["Q1"] + rnd4["Q2"] + rnd4["Q3"])
         OR4, OR4_lo, OR4_hi = odds_ratio_2x2(a4,b4,c4,d4)
 
-        plot_grouped_percent_only(axes[i,1], order4, obs4, rnd4, COL4, f"{sec}: Stress quartiles ({mode})")
+        plot_grouped_percent_only(axes[i,1], order4, obs4, rnd4, COL4, f"{sec}: Stress quartiles")
         axes[i,1].text(
             0.02, 0.98,
             f"$\\chi^2$={chi2_4:.1f}, p={p_4:.1e}\nOR(Q4)={OR4:.2f} [{OR4_lo:.2f},{OR4_hi:.2f}]",
@@ -488,17 +488,16 @@ def run_mode(mode_name):
     from matplotlib.patches import Patch
     fig.legend(handles=[
         Patch(facecolor="lightgray", edgecolor="black", alpha=0.95, label="Facilities"),
-        Patch(facecolor="lightgray", edgecolor="black", alpha=0.55, label=f"Random ({mode}, N matched)")
+        Patch(facecolor="lightgray", edgecolor="black", alpha=0.55, label="Basin-matched random")
     ], loc="lower center", ncol=2, frameon=False)
 
-    fig.suptitle(
-        "MAIN: Basin-scale water-stress siting (ALL BASINS random baseline)\n"
-        "Stress: Aqueduct 4.0 annual baseline water stress via HydroBASINS Level 6 | Bins: ALL BASINS quantiles | Random N matched per sector",
-        y=0.98, fontsize=14, fontweight="semibold"
+    fig.tight_layout(
+        rect=(0.055, 0.065, 0.995, 0.995),
+        pad=0.5,
+        h_pad=0.6,
+        w_pad=0.6
     )
-
-    fig.tight_layout(rect=(0.06, 0.12, 0.995, 0.92))
-    fig.savefig(OUT_FIG, dpi=350, bbox_inches="tight", pad_inches=0.20)
+    fig.savefig(OUT_FIG, dpi=350, bbox_inches="tight", pad_inches=0.03)
     plt.show()
 
 
