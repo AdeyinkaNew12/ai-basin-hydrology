@@ -69,7 +69,7 @@ AI_FILE       = PROJECT_DIR / "DC_CONUS.csv"
 POWER_FILE    = PROJECT_DIR / "Power_Unique_Site_CONUS.xlsx"
 TRI_FILE      = PROJECT_DIR / "TRI_2024_Unique_Site_CONUS.csv"
 BASINS_SHP    = PROJECT_DIR / "hybas_na_lev08_v1c.shp"
-AQUEDUCT_CSV  = PROJECT_DIR / "Aqueduct40_baseline_monthly_y2023m07d05.csv"
+AQUEDUCT_CSV  = Path(DATA_FOLDERS["aqueduct_stress"]) / "Aqueduct40_baseline_annual_y2023m07d05.csv"
 
 OUT_DIR = Path(output_folder("water_stress_siting"))
 OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -78,7 +78,7 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 # PARAMS
 # -------------------------
 SECTORS    = ["AI","Power","TRI"]
-STRESS_COL = "bws_01_raw"
+STRESS_COL = "bws_raw"
 
 BASE_SEED = 7
 SEED_MAP  = {"AI": 101, "Power": 202, "TRI": 303}
@@ -274,11 +274,21 @@ bas8 = bas[["PFAF_ID","pfaf6","geometry"]].copy()
 aq = pd.read_csv(AQUEDUCT_CSV, low_memory=False)
 aq.columns = aq.columns.astype(str).str.strip()
 if ("pfaf_id" not in aq.columns) or (STRESS_COL not in aq.columns):
-    raise RuntimeError("Aqueduct CSV must contain columns: pfaf_id and bws_01_raw.")
+    raise RuntimeError(f"Aqueduct CSV must contain columns: pfaf_id and {STRESS_COL}.")
 
 aq_small = aq[["pfaf_id", STRESS_COL]].copy()
 aq_small["pfaf_id"] = pd.to_numeric(aq_small["pfaf_id"], errors="coerce").astype("Int64")
 aq_small[STRESS_COL] = pd.to_numeric(aq_small[STRESS_COL], errors="coerce")
+
+# Retain one annual Aqueduct stress value per Level-6 basin.
+# Duplicate pfaf_id records have identical bws_raw values.
+aq_small = (
+    aq_small
+    .dropna(subset=["pfaf_id"])
+    .query("pfaf_id != -9999")
+    .drop_duplicates(subset=["pfaf_id"])
+    .copy()
+)
 
 bas_stress = bas8.merge(aq_small, left_on="pfaf6", right_on="pfaf_id", how="left")
 bas_stress = bas_stress.rename(columns={STRESS_COL:"stress_value"}).drop(columns=["pfaf_id"], errors="ignore")
