@@ -4,7 +4,7 @@ This repository contains the reproducible Python workflows supporting the analys
 
 The archived software release is available through Zenodo:
 
-https://doi.org/10.5281/zenodo.21795410
+https://doi.org/10.5281/zenodo.21864441
 
 The workflow integrates AI data-center locations with hydrographic datasets, hydrologic simulations, water-stress indicators, aquifer information, and industrial infrastructure datasets to evaluate relationships between digital infrastructure and freshwater systems.
 
