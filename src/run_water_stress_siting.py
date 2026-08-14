@@ -339,77 +339,73 @@ def run_mode(mode_name):
 
     fac.drop(columns=["index_right"], errors="ignore").to_csv(OUT_JOINED, index=False)
 
-    rand_rows = []
-    for sec in SECTORS:
-        obs = fac[fac["sector"] == sec].copy()
-        N = len(obs)
-        if N == 0:
-            continue
+    # ---------------------------------------------------------
+    # Common CONUS equal-area reference distribution
+    # ---------------------------------------------------------
+    # Generate one common spatial reference for all sectors.
+    # Random locations are generated in CONUS Albers Equal Area
+    # (EPSG:5070) so that equal geographic area has equal
+    # probability of being sampled.
 
-        poly = bas_stress.copy()
+    reference_n = POOL_CAP
 
-        pool_n = int(
-            min(
-                POOL_CAP,
-                max(N + 1000, np.ceil(POOL_FACTOR * N)),
-            )
-        )
+    seed = (
+        BASE_SEED
+        + MODE_SEED[mode]
+    )
 
-        seed = (
-            BASE_SEED
-            + SEED_MAP.get(sec, 999)
-            + MODE_SEED[mode]
-        )
+    # Project Level-8 basin polygons to an equal-area CRS before
+    # generating spatially uniform random reference locations.
+    bas_stress_equal_area = bas_stress.to_crs("EPSG:5070")
 
-        pool = generate_random_points_in_polygonset(
-            poly,
-            n=pool_n,
-            seed=seed,
-        )
+    pool_equal_area = generate_random_points_in_polygonset(
+        bas_stress_equal_area,
+        n=reference_n,
+        seed=seed,
+    )
 
-        poolj = safe_sjoin(
-            pool,
-            bas_stress[
-                [
-                    "PFAF_ID",
-                    "stress_value",
-                    "stress_tertile",
-                    "stress_quartile",
-                    "geometry",
-                ]
-            ],
-            how="left",
-            predicate="within",
-        ).rename(columns={"PFAF_ID": "pfaf_id_lev08"})
-
-        pool_valid = poolj.dropna(
-            subset=[
+    # Attach the Level-8 basin and Aqueduct stress attributes
+    # directly in the same equal-area CRS.
+    rand = safe_sjoin(
+        pool_equal_area,
+        bas_stress_equal_area[
+            [
+                "PFAF_ID",
                 "stress_value",
                 "stress_tertile",
                 "stress_quartile",
+                "geometry",
             ]
-        ).copy()
+        ],
+        how="left",
+        predicate="within",
+    ).rename(
+        columns={"PFAF_ID": "pfaf_id_lev08"}
+    )
 
-        if len(pool_valid) < N:
-            raise RuntimeError(
-                f"{sec} ({mode}): pool_valid={len(pool_valid)} "
-                f"< N={N}. Increase POOL_FACTOR/POOL_CAP."
-            )
+    rand = rand.dropna(
+        subset=[
+            "stress_value",
+            "stress_tertile",
+            "stress_quartile",
+        ]
+    ).copy()
 
-        # Randomly retain N valid reference locations.
-        rnd = pool_valid.sample(
-            n=N,
-            replace=False,
-            random_state=seed,
-        ).copy()
+    rand = stable_sort_for_repro(rand)
+    rand["sector"] = "Reference"
 
-        # Sort only after random selection for reproducible file ordering.
-        rnd = stable_sort_for_repro(rnd)
-        rnd["sector"] = sec
-        rand_rows.append(rnd)
+    rand.drop(
+        columns=["index_right"],
+        errors="ignore"
+    ).to_csv(
+        OUT_RANDOM,
+        index=False
+    )
 
-    rand = pd.concat(rand_rows, ignore_index=True)
-    rand.drop(columns=["index_right"], errors="ignore").to_csv(OUT_RANDOM, index=False)
+    print(
+        f"{mode}: common CONUS equal-area reference "
+        f"n={len(rand):,}, CRS={rand.crs}"
+    )
 
     order3 = ["low","medium","high"]
     order4 = ["Q1","Q2","Q3","Q4"]
@@ -429,7 +425,7 @@ def run_mode(mode_name):
 
     for i, sec in enumerate(SECTORS):
         obs = fac[fac["sector"] == sec].copy()
-        rr  = rand[rand["sector"] == sec].copy()
+        rr  = rand.copy()
         N = len(obs)
         if N == 0:
             axes[i,0].axis("off"); axes[i,1].axis("off")
