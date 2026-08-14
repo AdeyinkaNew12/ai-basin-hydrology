@@ -111,8 +111,11 @@ mpl.rcParams.update({
     "legend.frameon": False,
 })
 
-COL3 = {"low":"#0072B2", "medium":"#009E73", "high":"#CC79A7"}
-COL4 = {"Q1":"#56B4E9", "Q2":"#009E73", "Q3":"#E69F00", "Q4":"#D55E00"}
+SECTOR_COLOR = {
+    "AI": "#1f78b4",
+    "Power": "#d95f02",
+    "TRI": "#1b9e77",
+}
 
 need = [AI_FILE, POWER_FILE, TRI_FILE, BASINS_SHP, AQUEDUCT_CSV]
 missing = [p for p in need if not p.exists()]
@@ -234,9 +237,12 @@ def clean_axis(ax):
     for side in ["left","bottom","right","top"]:
         ax.spines[side].set_linewidth(0.9)
 
-def plot_grouped_percent_only(ax, classes, obs_counts, rnd_counts, color_map, title):
+def plot_grouped_percent_only(
+    ax, classes, obs_counts, rnd_counts, sector_color, title
+):
     obs_total = int(obs_counts.sum())
     rnd_total = int(rnd_counts.sum())
+
     p_obs = (obs_counts / max(1, obs_total)).values
     p_rnd = (rnd_counts / max(1, rnd_total)).values
 
@@ -244,18 +250,54 @@ def plot_grouped_percent_only(ax, classes, obs_counts, rnd_counts, color_map, ti
     w = 0.36
 
     for i, cls in enumerate(classes):
-        col = color_map[cls]
-        ax.bar(x[i]-w/2, p_obs[i], width=w, color=col, alpha=0.95, edgecolor="black", linewidth=0.9)
-        ax.bar(x[i]+w/2, p_rnd[i], width=w, color=col, alpha=0.55, edgecolor="black", linewidth=0.9)
+
+        # Observed facilities: solid sector color
+        ax.bar(
+            x[i] - w/2,
+            p_obs[i],
+            width=w,
+            color=sector_color,
+            edgecolor="black",
+            linewidth=0.9,
+            alpha=0.95,
+        )
+
+        # Common CONUS reference: same sector color but hatched
+        ax.bar(
+            x[i] + w/2,
+            p_rnd[i],
+            width=w,
+            color=sector_color,
+            edgecolor="black",
+            linewidth=0.9,
+            alpha=0.30,
+            hatch="///",
+        )
 
         if SHOW_PERCENT_LABELS:
-            ax.text(x[i]-w/2, p_obs[i]+0.015, f"{p_obs[i]*100:.{PCT_DECIMALS}f}%", ha="center", va="bottom", fontsize=10)
-            ax.text(x[i]+w/2, p_rnd[i]+0.015, f"{p_rnd[i]*100:.{PCT_DECIMALS}f}%", ha="center", va="bottom", fontsize=10)
+            ax.text(
+                x[i] - w/2,
+                p_obs[i] + 0.015,
+                f"{p_obs[i]*100:.{PCT_DECIMALS}f}%",
+                ha="center",
+                va="bottom",
+                fontsize=10,
+            )
+
+            ax.text(
+                x[i] + w/2,
+                p_rnd[i] + 0.015,
+                f"{p_rnd[i]*100:.{PCT_DECIMALS}f}%",
+                ha="center",
+                va="bottom",
+                fontsize=10,
+            )
 
     ax.set_xticks(x)
     ax.set_xticklabels(classes)
     ax.set_title(title)
     clean_axis(ax)
+
 
 # -------------------------
 # Load basins + Aqueduct stress
@@ -439,7 +481,7 @@ def run_mode(mode_name):
         c = int(rnd3["high"]); d = int(rnd3["low"] + rnd3["medium"])
         ORh, ORh_lo, ORh_hi = odds_ratio_2x2(a,b,c,d)
 
-        plot_grouped_percent_only(axes[i,0], order3, obs3, rnd3, COL3, f"{sec}: Stress tertiles")
+        plot_grouped_percent_only(axes[i,0], order3, obs3, rnd3, SECTOR_COLOR[sec], f"{sec}: Stress tertiles")
         axes[i,0].text(
             0.02, 0.98,
             f"$\\chi^2$={chi2_3:.1f}, p={p_3:.1e}\nOR(high)={ORh:.2f} [{ORh_lo:.2f},{ORh_hi:.2f}]",
@@ -456,7 +498,7 @@ def run_mode(mode_name):
         c4 = int(rnd4["Q4"]); d4 = int(rnd4["Q1"] + rnd4["Q2"] + rnd4["Q3"])
         OR4, OR4_lo, OR4_hi = odds_ratio_2x2(a4,b4,c4,d4)
 
-        plot_grouped_percent_only(axes[i,1], order4, obs4, rnd4, COL4, f"{sec}: Stress quartiles")
+        plot_grouped_percent_only(axes[i,1], order4, obs4, rnd4, SECTOR_COLOR[sec], f"{sec}: Stress quartiles")
         axes[i,1].text(
             0.02, 0.98,
             f"$\\chi^2$={chi2_4:.1f}, p={p_4:.1e}\nOR(Q4)={OR4:.2f} [{OR4_lo:.2f},{OR4_hi:.2f}]",
@@ -483,8 +525,11 @@ def run_mode(mode_name):
 
     from matplotlib.patches import Patch
     fig.legend(handles=[
-        Patch(facecolor="lightgray", edgecolor="black", alpha=0.95, label="Facilities"),
-        Patch(facecolor="lightgray", edgecolor="black", alpha=0.55, label="Basin-matched random")
+        Patch(facecolor="lightgray", edgecolor="black",
+              alpha=0.95, label="Facilities"),
+        Patch(facecolor="lightgray", edgecolor="black",
+              alpha=0.30, hatch="///",
+              label="Common CONUS reference")
     ], loc="lower center", ncol=2, frameon=False)
 
     fig.tight_layout(
