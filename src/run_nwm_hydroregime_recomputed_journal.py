@@ -581,12 +581,12 @@ plt.rcParams.update({
     "figure.dpi": 180,
     "savefig.dpi": 700,
     "font.family": "sans-serif",
-    "font.size": 11,
-    "axes.titlesize": 16,
-    "axes.labelsize": 14,
-    "xtick.labelsize": 11,
-    "ytick.labelsize": 11,
-    "legend.fontsize": 11,
+    "font.size": 9,
+    "axes.titlesize": 10,
+    "axes.labelsize": 9,
+    "xtick.labelsize": 9,
+    "ytick.labelsize": 9,
+    "legend.fontsize": 9,
     "axes.linewidth": 1.0,
     "axes.spines.top": False,
     "axes.spines.right": False,
@@ -594,57 +594,14 @@ plt.rcParams.update({
     "figure.facecolor": "white",
 })
 
-FIG1 = os.path.join(OUTDIR, "FIG_1_NWM_HydroRegime_ECDF.png")
-
-fig, axes = plt.subplots(3, 3, figsize=(13.4, 10.2), sharey=True)
-fig.subplots_adjust(left=0.09, right=0.985, bottom=0.10, top=0.90, wspace=0.20, hspace=0.22)
-
-for i, sector in enumerate(SECTORS):
-    for j, metric in enumerate(METRICS):
-        ax = axes[i, j]
-        out = matched_cache.get((sector, metric), None)
-
-        if out is None:
-            ax.text(0.5, 0.5, "Insufficient data", ha="center", va="center",
-                    transform=ax.transAxes, fontsize=11, fontweight="bold")
-            ax.set_axis_off()
-            continue
-
-        xg = out["x_grid"]
-        ax.fill_between(xg, out["b_lo"], out["b_hi"], color=COLOR[sector], alpha=0.10, lw=0)
-        ax.plot(xg, out["b_med"], color=COLOR[sector], lw=2.0, ls="--")
-        ax.plot(xg, out["g_ecdf"], color=COLOR[sector], lw=2.8)
-
-        lim = xlim_quantiles(df, metric, 0.01, 0.99 if metric == "CVQ" else 0.995)
-        if lim is not None:
-            ax.set_xlim(*lim)
-
-        ax.set_ylim(0, 1.0)
-        ax.set_yticks(np.linspace(0, 1, 6))
-        ax.grid(True, color=GRAY_GRID, linewidth=0.8)
-
-        if i == 0:
-            ax.set_title(title_map[metric], fontweight="bold", pad=10)
-        if j == 0:
-            ax.set_ylabel(sector, fontweight="bold", labelpad=12)
-        if i == 2:
-            ax.set_xlabel(title_map[metric], fontweight="bold")
-
-handles1 = [
-    Line2D([0], [0], color=BLACKISH, lw=2.8, label="Sector basin"),
-    Line2D([0], [0], color=BLACKISH, lw=2.0, ls="--", label="Matched baseline"),
-    Patch(facecolor=GRAY_FILL, edgecolor="none", alpha=0.25, label="95% CI"),
-]
-
-fig.legend(handles=handles1, loc="upper center", bbox_to_anchor=(0.5, 0.975), ncol=3, frameon=False)
-fig.savefig(FIG1, bbox_inches="tight")
-plt.close()
-print("Saved:", FIG1)
-
+# ============================================================
+# EXPLORATORY FIGURE 1 REMOVED FROM PRODUCTION WORKFLOW
+# The manuscript uses only the matched-baseline effect-size figure.
+# ============================================================
 
 FIG2 = os.path.join(OUTDIR, "FIG_2_NWM_HydroRegime_EffectSizes.png")
 
-fig2, ax = plt.subplots(figsize=(10.8, 6.8))
+fig2, ax = plt.subplots(figsize=(6.0, 3.4), dpi=450)
 fig2.subplots_adjust(left=0.24, right=0.98, bottom=0.16, top=0.88)
 
 metric_order = ["RBI", "season_conc", "CVQ"]
@@ -696,55 +653,37 @@ ax.set_xlim(np.nanmin(all_lo) - 0.015, np.nanmax(all_hi) + 0.015)
 
 ax.set_yticks(base_y)
 ax.set_yticklabels([metric_labels[m] for m in metric_order], fontweight="bold")
-ax.set_xlabel("Median difference (sector - matched baseline)", fontweight="bold")
-ax.set_title("Matched-baseline effect sizes", fontweight="bold", fontsize=20, pad=12)
+ax.set_xlabel(
+    "Median difference (sector - matched baseline)",
+    fontsize=9
+)
+ax.tick_params(axis="both", labelsize=9)
+
+ax.set_title(
+    "Matched-baseline effect sizes",
+    fontsize=10,
+    fontweight="bold",
+    pad=4
+)
 ax.grid(True, axis="x", color=GRAY_GRID, linewidth=0.8)
 ax.grid(False, axis="y")
-ax.legend(frameon=False, ncol=3, loc="upper center", bbox_to_anchor=(0.5, 1.03))
+ax.legend(
+    frameon=False,
+    ncol=3,
+    loc="upper center",
+    bbox_to_anchor=(0.5, 1.03),
+    fontsize=9
+)
 
 fig2.savefig(FIG2, bbox_inches="tight")
 plt.close()
 print("Saved:", FIG2)
 
 
-FIG3 = os.path.join(OUTDIR, "FIG_3_NWM_HydroRegime_CombinedSectors.png")
-
-fig3, axes3 = plt.subplots(1, 3, figsize=(13.4, 4.8), sharey=True)
-fig3.subplots_adjust(left=0.06, right=0.985, bottom=0.18, top=0.82, wspace=0.20)
-
-for j, metric in enumerate(METRICS):
-    ax = axes3[j]
-
-    x_none, y_none = ecdf_xy(df.loc[df["group_excl"] == "None", metric])
-    if x_none is not None:
-        ax.plot(x_none, y_none, color=NONE_COLOR, lw=2.3, label="None")
-
-    x_ai, y_ai = ecdf_xy(df.loc[df["AI_present"] == 1, metric])
-    if x_ai is not None:
-        ax.plot(x_ai, y_ai, color=COLOR["AI"], lw=2.8, label="AI")
-
-    x_pow, y_pow = ecdf_xy(df.loc[df["Power_present"] == 1, metric])
-    if x_pow is not None:
-        ax.plot(x_pow, y_pow, color=COLOR["Power"], lw=2.8, label="Power")
-
-    x_tri, y_tri = ecdf_xy(df.loc[df["TRI_present"] == 1, metric])
-    if x_tri is not None:
-        ax.plot(x_tri, y_tri, color=COLOR["TRI"], lw=2.8, label="TRI")
-
-    lim = xlim_quantiles(df, metric, 0.01, 0.99 if metric == "CVQ" else 0.995)
-    if lim is not None:
-        ax.set_xlim(*lim)
-
-    ax.set_ylim(0, 1.03)
-    ax.set_title(title_map[metric], fontweight="bold", pad=10)
-    ax.set_xlabel("Value", fontweight="bold")
-    ax.grid(True, color=GRAY_GRID, linewidth=0.8)
-
-handles, labels = axes3[0].get_legend_handles_labels()
-fig3.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 0.955), ncol=4, frameon=False)
-fig3.savefig(FIG3, bbox_inches="tight")
-plt.close()
-print("Saved:", FIG3)
+# ============================================================
+# EXPLORATORY FIGURE 3 REMOVED FROM PRODUCTION WORKFLOW
+# The manuscript uses only the matched-baseline effect-size figure.
+# ============================================================
 
 print("\nDONE")
 print("All outputs saved in:", OUTDIR)
