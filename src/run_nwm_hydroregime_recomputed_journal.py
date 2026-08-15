@@ -29,9 +29,9 @@ from common_paths import DATA_FOLDERS, output_folder
 
 PROJECT_DIR = DATA_FOLDERS["nwm_hydroregime"]
 
-AI_FILE = "/mnt/disk3/aoolaseinde/data/WaterProject/DC_CONUS.csv"
-POWER_FILE = "/mnt/disk3/aoolaseinde/data/WaterProject/Power_Unique_Site_CONUS.xlsx"
-TRI_FILE = "/mnt/disk3/aoolaseinde/data/WaterProject/TRI_2024_Unique_Site_CONUS.csv"
+AI_FILE = "/mnt/disk3/aoolaseinde/data/WaterProject/DC_CONUS_STRICT.csv"
+POWER_FILE = "/mnt/disk3/aoolaseinde/data/WaterProject/Power_Unique_Site_CONUS_STRICT.xlsx"
+TRI_FILE = "/mnt/disk3/aoolaseinde/data/WaterProject/TRI_2024_Unique_Site_CONUS_STRICT.csv"
 BASINS_SHP = os.path.join(PROJECT_DIR, "hybas_na_lev08_v1c.shp")
 
 OUTDIR = "/mnt/disk3/aoolaseinde/projects/integrated_dc_water_pathways/results/nwm_hydroregime"

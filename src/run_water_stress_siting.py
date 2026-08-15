@@ -65,9 +65,9 @@ from scipy.stats import chi2_contingency
 # -------------------------
 PROJECT_DIR = Path(DATA_FOLDERS["water_project"])
 
-AI_FILE       = PROJECT_DIR / "DC_CONUS.csv"
-POWER_FILE    = PROJECT_DIR / "Power_Unique_Site_CONUS.xlsx"
-TRI_FILE      = PROJECT_DIR / "TRI_2024_Unique_Site_CONUS.csv"
+AI_FILE       = PROJECT_DIR / "DC_CONUS_STRICT.csv"
+POWER_FILE    = PROJECT_DIR / "Power_Unique_Site_CONUS_STRICT.xlsx"
+TRI_FILE      = PROJECT_DIR / "TRI_2024_Unique_Site_CONUS_STRICT.csv"
 BASINS_SHP    = PROJECT_DIR / "hybas_na_lev08_v1c.shp"
 AQUEDUCT_CSV  = Path(DATA_FOLDERS["aqueduct_stress"]) / "Aqueduct40_baseline_annual_y2023m07d05.csv"
 
