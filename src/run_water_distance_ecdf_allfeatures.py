@@ -44,7 +44,7 @@ OUT_PDF = os.path.join(OUTDIR, "WaterDistance_ECDF_allfeatures.pdf")
 OUT_SUMMARY = os.path.join(OUTDIR, "WaterDistance_ECDF_input_summary.csv")
 
 SECTORS = ["AI", "Power", "TRI"]
-COLORS = {"AI": "#1f77b4", "Power": "#2ca02c", "TRI": "#9467bd"}
+COLORS = {"AI": "#1f78b4", "Power": "#d95f02", "TRI": "#1b9e77"}
 
 
 def load_distance_file(path):
