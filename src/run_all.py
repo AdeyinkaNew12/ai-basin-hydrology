@@ -1,43 +1,83 @@
 #!/usr/bin/env python3
-"""
-Run All AI Basin Hydrology Analyses
 
-This script runs the active final workflow in sequence.
-It uses central paths defined in src/common_paths.py.
-"""
-
-from __future__ import annotations
-
+import argparse
 import subprocess
 import sys
 from pathlib import Path
 
-SCRIPTS = [
-    "run_groundwater_dc_analysis.py",
-    # ARCHIVED FIGURE 3 — removed from active run-all workflow:
-    "run_huc2_facility_share_map.py",
-    "run_ecdf_all_water_features.py",
-    "run_nwm_hydroregime_recomputed_journal.py",
-    "run_water_stress_siting.py",
-]
 
-SRC_DIR = Path(__file__).resolve().parent
+SRC_DIR = Path(__file__).parent
+ANALYSIS_DIR = SRC_DIR / "analyses"
 
 
-def main() -> None:
-    for script in SCRIPTS:
-        script_path = SRC_DIR / script
+ANALYSES = {
+    "huc2_facility_distribution":
+        "huc2_facility_distribution.py",
 
-        print("\n" + "=" * 72)
-        print(f"RUNNING: {script}")
-        print("=" * 72)
+    "water_distance_ecdf":
+        "water_distance_ecdf.py",
 
-        if not script_path.exists():
-            raise FileNotFoundError(f"Missing script: {script_path}")
+    "water_supply_pathways":
+        "water_supply_pathways.py",
 
-        subprocess.run([sys.executable, str(script_path)], check=True)
+    "water_stress_analysis":
+        "water_stress_analysis.py",
 
-    print("\nAll analyses completed successfully.")
+    "hydrologic_regimes":
+        "hydrologic_regimes.py",
+}
+
+
+def run_analysis(name):
+
+    script = ANALYSIS_DIR / ANALYSES[name]
+
+    if not script.exists():
+        raise FileNotFoundError(
+            f"Missing analysis script: {script}"
+        )
+
+    print("\n" + "=" * 70)
+    print(f"Running analysis: {name}")
+    print("=" * 70)
+
+    subprocess.run(
+        [sys.executable, str(script)],
+        check=True
+    )
+
+
+def main():
+
+    parser = argparse.ArgumentParser(
+        description=(
+            "Run reproducible hydrologic and infrastructure "
+            "analyses"
+        )
+    )
+
+    parser.add_argument(
+        "--analysis",
+        choices=ANALYSES.keys(),
+        help=(
+            "Run a single analysis. "
+            "If omitted, all analyses are executed."
+        )
+    )
+
+    args = parser.parse_args()
+
+
+    if args.analysis:
+
+        run_analysis(args.analysis)
+
+    else:
+
+        for name in ANALYSES:
+            run_analysis(name)
+
+        print("\nAll analyses completed successfully.")
 
 
 if __name__ == "__main__":
