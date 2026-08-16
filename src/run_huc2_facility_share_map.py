@@ -5,9 +5,9 @@ HUC2 Facility Share Choropleth Map
 This script aggregates AI data centers, power plants, and TRI facilities to HUC2 regions and creates a three-panel choropleth map showing each sector’s share of national facilities by hydrologic region.
 
 Input files used:
-- DC_CONUS.csv
-- Power_Unique_Site_CONUS.xlsx
-- TRI_2024_Unique_Site_CONUS.csv
+- DC_CONUS_STRICT.csv
+- Power_Unique_Site_CONUS_STRICT.xlsx
+- TRI_2024_Unique_Site_CONUS_STRICT.csv
 - WBD_National_GPKG.gpkg
 
 Server/GitHub version:
@@ -46,19 +46,19 @@ from matplotlib.patches import Patch
 import matplotlib.patheffects as pe
 
 PROJECT_DIR = DEFAULT_DATA_ROOT
-AI_FILE = os.path.join(DEFAULT_DATA_ROOT, "DC_CONUS.csv")
-POWER_FILE = os.path.join(DEFAULT_DATA_ROOT, "Power_Unique_Site_CONUS.xlsx")
-TRI_FILE = os.path.join(DEFAULT_DATA_ROOT, "TRI_2024_Unique_Site_CONUS.csv")
+AI_FILE = os.path.join(DEFAULT_DATA_ROOT, "DC_CONUS_STRICT.csv")
+POWER_FILE = os.path.join(DEFAULT_DATA_ROOT, "Power_Unique_Site_CONUS_STRICT.xlsx")
+TRI_FILE = os.path.join(DEFAULT_DATA_ROOT, "TRI_2024_Unique_Site_CONUS_STRICT.csv")
 HYBAS_FILE = os.path.join(DEFAULT_DATA_ROOT, "hybas_na_lev08_v1c.shp")
 HUC_FILE     = os.path.join(PROJECT_DIR, "WBD_National_GPKG", "WBD_National_GPKG.gpkg")
 
-OUT_FIG = os.path.join(DEFAULT_OUTPUT_ROOT, 'HUC2_FacilitySharePct_3panel_AI_Power_TRI_BBOXLABELS.png')
+OUT_FIG = os.path.join(DEFAULT_OUTPUT_ROOT, 'figure1_facility_distribution_water_stress_huc.png')
 
-N_LABELS = 12
-LABEL_MIN_PCT = 0.20
-CANDIDATE_POOL = 80
+N_LABELS = 10
+LABEL_MIN_PCT = 3.0
+CANDIDATE_POOL = 40
 
-LABEL_FONTSIZE = 10.5
+LABEL_FONTSIZE = 10
 LABEL_WEIGHT = "semibold"
 TEXT_EFFECTS = [pe.withStroke(linewidth=1.2, foreground="white")]
 
@@ -98,7 +98,7 @@ def find_excel_header_row(path, sheet_name=None, max_rows=80):
             has_lon = any(("longitude" in v) or (v.strip() in ["lon","long","lng"]) for v in row_vals)
             if has_lat and has_lon:
                 return r, sh
-    raise RuntimeError("Could not find Latitude/Longitude header row in Power_Unique_Site_CONUS.xlsx")
+    raise RuntimeError("Could not find Latitude/Longitude header row in Power_Unique_Site_CONUS_STRICT.xlsx")
 
 
 def filter_to_hydrobasins_domain(gdf, hybas_file, label):
@@ -140,7 +140,7 @@ def load_points_csv(path, name, force_lat=None, force_lon=None):
 
 def load_points_power_excel(path):
     """
-    Robust loader for cleaned Power_Unique_Site_CONUS.xlsx.
+    Robust loader for cleaned Power_Unique_Site_CONUS_STRICT.xlsx.
     Handles Sheet1/Plant sheet names and normal Latitude/Longitude columns.
     """
     import pandas as pd
@@ -273,13 +273,13 @@ def draw_panel(ax, gdf, color_map, panel_letter, title, total):
             sub.plot(ax=ax, color=color_map[lbl], edgecolor=EDGE_COLOR, linewidth=EDGE_LW)
 
     ax.text(0.03, 0.97, panel_letter, transform=ax.transAxes,
-            ha="left", va="top", fontsize=10.5, fontweight="normal")
-    ax.set_title(title, fontsize=17, fontweight="bold", pad=10)
+            ha="left", va="top", fontsize=9, fontweight="normal")
+    ax.set_title(title, fontsize=11, fontweight="bold", pad=4)
 
     place_labels_bbox(ax, gdf, N_LABELS, LABEL_MIN_PCT, CANDIDATE_POOL)
 
     ax.text(0.99, 0.01, f"N={total:,}", transform=ax.transAxes,
-            ha="right", va="bottom", fontsize=10.5)
+            ha="right", va="bottom", fontsize=9)
     ax.set_axis_off()
 
 layers = fiona.listlayers(HUC_FILE)
@@ -322,20 +322,30 @@ grn_map = {
 }
 
 plt.rcParams.update({"font.family": "DejaVu Sans"})
-fig, axes = plt.subplots(1, 3, figsize=(17.5, 5.6), dpi=450)
+fig, axes = plt.subplots(
+    3, 1,
+    figsize=(6.5, 10.0),
+    dpi=600
+)
 
 draw_panel(axes[0], m_ai,  blue_map, "a", "AI Data Centers",  tot_ai)
 draw_panel(axes[1], m_pwr, orng_map, "b", "Power Facilities", tot_pwr)
 draw_panel(axes[2], m_tri, grn_map,  "c", "TRI Facilities",   tot_tri)
 
 axes[0].legend(handles=legend_handles(blue_map), title="Share of national facilities (%)",
-               loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=3, frameon=False, fontsize=10.5, title_fontsize=10.5)
+               loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=3, frameon=False, fontsize=9, title_fontsize=9)
 axes[1].legend(handles=legend_handles(orng_map), title="Share of national facilities (%)",
-               loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=3, frameon=False, fontsize=10.5, title_fontsize=10.5)
+               loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=3, frameon=False, fontsize=9, title_fontsize=9)
 axes[2].legend(handles=legend_handles(grn_map),  title="Share of national facilities (%)",
-               loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=3, frameon=False, fontsize=10.5, title_fontsize=10.5)
+               loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=3, frameon=False, fontsize=9, title_fontsize=9)
 
-plt.subplots_adjust(bottom=0.24, wspace=0.08)
+plt.subplots_adjust(
+    left=0.05,
+    right=0.95,
+    top=0.96,
+    bottom=0.05,
+    hspace=0.65
+)
 plt.savefig(OUT_FIG, dpi=600, bbox_inches="tight", pad_inches=0.10)
 plt.show()
 
