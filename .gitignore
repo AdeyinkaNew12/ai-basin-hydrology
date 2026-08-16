@@ -44,3 +44,8 @@ figures/
 **/WaterDistance_ECDF_allfeatures*.png
 **/WaterDistance_ECDF_allfeatures*.pdf
 archive/
+__pycache__/
+*.pyc
+*.bak*
+__pycache__/
+*.pyc
