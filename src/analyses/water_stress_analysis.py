@@ -506,8 +506,8 @@ def run_mode(mode_name):
     # ------------------------------------------------------------
 
     fig, axes = plt.subplots(
-        3,
         2,
+        3,
         figsize=(14.4, 7.6),
         dpi=600,
         sharey=True,
@@ -535,8 +535,8 @@ def run_mode(mode_name):
         N = len(obs)
 
         if N == 0:
-            axes[i, 0].axis("off")
-            axes[i, 1].axis("off")
+            axes[0, i].axis("off")
+            axes[1, i].axis("off")
             continue
 
         # ========================================================
@@ -568,7 +568,7 @@ def run_mode(mode_name):
             a, b, c, d
         )
 
-        ax = axes[i, 0]
+        ax = axes[0, i]
 
         plot_grouped_percent_only(
             ax,
@@ -640,7 +640,7 @@ def run_mode(mode_name):
             d4,
         )
 
-        ax = axes[i, 1]
+        ax = axes[1, i]
 
         plot_grouped_percent_only(
             ax,
