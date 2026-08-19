@@ -48,7 +48,7 @@ print("[INFO] DEFAULT_OUTPUT_ROOT =", DEFAULT_OUTPUT_ROOT)
 # 1) Set PROJECT_DIR below to the folder that contains your input files.
 # 2) Ensure the files listed in INPUT FILENAMES exist in that folder.
 # 3) Run this cell. Outputs will be created in:
-#     
+#
 # ============================================================
 
 
@@ -476,72 +476,43 @@ def run_mode(mode_name):
     order4 = ["Q1","Q2","Q3","Q4"]
 
     # ============================================================
-    # FINAL PUBLICATION FIGURE 5
-    #
-    # One 3 x 2 figure:
-    #   Left column  = stress tertiles
-    #   Right column = stress quartiles
-    #
-    # Typography:
-    #   Percentages/statistics/ticks = 9 pt
-    #   Panel titles                 = 10 pt bold
-    #   Shared y-axis label          = 10 pt bold
-    #   Shared legend               = 9 pt bold
+
+    # ============================================================
+
+    # ============================================================
+    # PUBLICATION FIGURE 4A: STRESS TERTILES
+    # Vertical 3 x 1 layout: AI / Power / TRI
     # ============================================================
 
     order3 = ["low", "medium", "high"]
     order4 = ["Q1", "Q2", "Q3", "Q4"]
 
-    stats_rows = []
-
-    # ------------------------------------------------------------
-    # Figure dimensions
-    # ------------------------------------------------------------
-    #
-    # 14.4 x 7.2 inches at 600 dpi gives:
-    # approximately 8640 x 4320 pixels.
-    #
-    # This keeps the 9-10 pt text at the actual figure size
-    # instead of shrinking two existing raster figures together.
-    # ------------------------------------------------------------
-
-    fig, axes = plt.subplots(
-        2,
-        3,
-        figsize=(14.4, 7.6),
+    fig_t, axes_t = plt.subplots(
+        3, 1,
+        figsize=(7.2, 5.8),
         dpi=600,
         sharey=True,
         constrained_layout=False,
     )
 
-    fig.subplots_adjust(
-        left=0.095,
+    fig_t.subplots_adjust(
+        left=0.105,
         right=0.985,
-        top=0.955,
-        bottom=0.105,
-        wspace=0.10,
-        hspace=0.38,
+        top=0.94,
+        bottom=0.13,
+        hspace=0.28,
     )
-
-    # ------------------------------------------------------------
-    # Plot each sector
-    # ------------------------------------------------------------
 
     for i, sec in enumerate(SECTORS):
 
         obs = fac[fac["sector"] == sec].copy()
         rr = rand.copy()
-
         N = len(obs)
+        ax = axes_t[i]
 
         if N == 0:
-            axes[0, i].axis("off")
-            axes[1, i].axis("off")
+            ax.axis("off")
             continue
-
-        # ========================================================
-        # TERTILES
-        # ========================================================
 
         obs3 = (
             obs["stress_tertile"]
@@ -564,11 +535,7 @@ def run_mode(mode_name):
         c = int(rnd3["high"])
         d = int(rnd3["low"] + rnd3["medium"])
 
-        ORh, ORh_lo, ORh_hi = odds_ratio_2x2(
-            a, b, c, d
-        )
-
-        ax = axes[0, i]
+        ORh, ORh_lo, ORh_hi = odds_ratio_2x2(a, b, c, d)
 
         plot_grouped_percent_only(
             ax,
@@ -579,136 +546,36 @@ def run_mode(mode_name):
             f"{sec}: Stress tertiles",
         )
 
-        # Statistical annotation
         ax.text(
             0.018,
             0.965,
-            f"$\\chi^2$={chi2_3:.1f}, p={p_3:.1e}\n"
+            f"$\\chi^2$={chi2_3:.1f}, p={p_3:.1e}\\n"
             f"OR(high)={ORh:.2f} [{ORh_lo:.2f},{ORh_hi:.2f}]",
             transform=ax.transAxes,
             ha="left",
             va="top",
-            fontsize=9.0,
-            fontweight="normal",
+            fontsize=8.5,
             bbox=dict(
-                boxstyle="round,pad=0.22",
+                boxstyle="round,pad=0.20",
                 facecolor="white",
                 alpha=0.96,
                 edgecolor="black",
-                linewidth=0.8,
+                linewidth=0.7,
             ),
         )
 
-        # ========================================================
-        # QUARTILES
-        # ========================================================
-
-        obs4 = (
-            obs["stress_quartile"]
-            .value_counts()
-            .reindex(order4, fill_value=0)
-        )
-
-        rnd4 = (
-            rr["stress_quartile"]
-            .value_counts()
-            .reindex(order4, fill_value=0)
-        )
-
-        chi2_4, p_4, _, _ = chi2_contingency(
-            np.vstack([obs4.values, rnd4.values])
-        )
-
-        a4 = int(obs4["Q4"])
-        b4 = int(
-            obs4["Q1"]
-            + obs4["Q2"]
-            + obs4["Q3"]
-        )
-
-        c4 = int(rnd4["Q4"])
-        d4 = int(
-            rnd4["Q1"]
-            + rnd4["Q2"]
-            + rnd4["Q3"]
-        )
-
-        OR4, OR4_lo, OR4_hi = odds_ratio_2x2(
-            a4,
-            b4,
-            c4,
-            d4,
-        )
-
-        ax = axes[1, i]
-
-        plot_grouped_percent_only(
-            ax,
-            order4,
-            obs4,
-            rnd4,
-            SECTOR_COLOR[sec],
-            f"{sec}: Stress quartiles",
-        )
-
-        # Statistical annotation
-        ax.text(
-            0.018,
-            0.965,
-            f"$\\chi^2$={chi2_4:.1f}, p={p_4:.1e}\n"
-            f"OR(Q4)={OR4:.2f} [{OR4_lo:.2f},{OR4_hi:.2f}]",
-            transform=ax.transAxes,
-            ha="left",
-            va="top",
-            fontsize=9.0,
-            fontweight="normal",
-            bbox=dict(
-                boxstyle="round,pad=0.22",
-                facecolor="white",
-                alpha=0.96,
-                edgecolor="black",
-                linewidth=0.8,
-            ),
-        )
-
-        # --------------------------------------------------------
-        # Save statistical results
-        # --------------------------------------------------------
-
-        stats_rows.append({
-            "Mode": mode,
-            "Sector": sec,
-            "N_with_stress": int(N),
-
-            "Chi2_tertiles": float(chi2_3),
-            "p_tertiles": float(p_3),
-
-            "OR_high": float(ORh),
-            "OR_high_lo": float(ORh_lo),
-            "OR_high_hi": float(ORh_hi),
-
-            "Chi2_quartiles": float(chi2_4),
-            "p_quartiles": float(p_4),
-
-            "OR_Q4": float(OR4),
-            "OR_Q4_lo": float(OR4_lo),
-            "OR_Q4_hi": float(OR4_hi),
-        })
-
-    # ------------------------------------------------------------
-    # Shared y-axis label
-    # ------------------------------------------------------------
+        ax.tick_params(axis="both", labelsize=9)
 
     try:
-        fig.supylabel(
+        fig_t.supylabel(
             "Proportion of facilities",
-            x=0.035,
+            x=0.045,
             fontsize=10,
             fontweight="bold",
         )
     except Exception:
-        fig.text(
-            0.035,
+        fig_t.text(
+            0.045,
             0.50,
             "Proportion of facilities",
             va="center",
@@ -717,10 +584,6 @@ def run_mode(mode_name):
             fontsize=10,
             fontweight="bold",
         )
-
-    # ------------------------------------------------------------
-    # One shared legend
-    # ------------------------------------------------------------
 
     from matplotlib.patches import Patch
 
@@ -740,43 +603,166 @@ def run_mode(mode_name):
         ),
     ]
 
-    fig.legend(
+    fig_t.legend(
         handles=legend_handles,
         loc="lower center",
-        bbox_to_anchor=(0.50, 0.025),
+        bbox_to_anchor=(0.50, 0.015),
         ncol=2,
         frameon=False,
-        fontsize=9.0,
-        prop={
-            "size": 9.0,
-            "weight": "bold",
-        },
+        fontsize=8.5,
     )
 
-    # ------------------------------------------------------------
-    # Final layout
-    # ------------------------------------------------------------
-
-    out_figure5 = (
+    out_tertiles = (
         OUT_FIG.parent /
-        "Figure5_water_stress_tertiles_quartiles.png"
+        "Figure4a_basin_scale_water_stress_tertiles.png"
     )
 
-    fig.savefig(
-        out_figure5,
+    fig_t.savefig(
+        out_tertiles,
         dpi=600,
         bbox_inches=None,
-        pad_inches=0.04,
+        pad_inches=0.03,
         facecolor="white",
     )
 
-    plt.close(fig)
+    plt.close(fig_t)
 
-    print(
-        f"Saved FINAL Figure 5: {out_figure5}"
+    print(f"Saved Figure 4a: {out_tertiles}")
+
+
+    # ============================================================
+    # PUBLICATION FIGURE 4B: STRESS QUARTILES
+    # Vertical 3 x 1 layout: AI / Power / TRI
+    # ============================================================
+
+    fig_q, axes_q = plt.subplots(
+        3, 1,
+        figsize=(7.2, 5.8),
+        dpi=600,
+        sharey=True,
+        constrained_layout=False,
     )
 
-    # DIRECT_SECTOR_COMPARISON_START
+    fig_q.subplots_adjust(
+        left=0.105,
+        right=0.985,
+        top=0.94,
+        bottom=0.13,
+        hspace=0.28,
+    )
+
+    for i, sec in enumerate(SECTORS):
+
+        obs = fac[fac["sector"] == sec].copy()
+        rr = rand.copy()
+        N = len(obs)
+        ax = axes_q[i]
+
+        if N == 0:
+            ax.axis("off")
+            continue
+
+        obs4 = (
+            obs["stress_quartile"]
+            .value_counts()
+            .reindex(order4, fill_value=0)
+        )
+
+        rnd4 = (
+            rr["stress_quartile"]
+            .value_counts()
+            .reindex(order4, fill_value=0)
+        )
+
+        chi2_4, p_4, _, _ = chi2_contingency(
+            np.vstack([obs4.values, rnd4.values])
+        )
+
+        a4 = int(obs4["Q4"])
+        b4 = int(obs4["Q1"] + obs4["Q2"] + obs4["Q3"])
+        c4 = int(rnd4["Q4"])
+        d4 = int(rnd4["Q1"] + rnd4["Q2"] + rnd4["Q3"])
+
+        OR4, OR4_lo, OR4_hi = odds_ratio_2x2(
+            a4, b4, c4, d4
+        )
+
+        plot_grouped_percent_only(
+            ax,
+            order4,
+            obs4,
+            rnd4,
+            SECTOR_COLOR[sec],
+            f"{sec}: Stress quartiles",
+        )
+
+        ax.text(
+            0.018,
+            0.965,
+            f"$\\chi^2$={chi2_4:.1f}, p={p_4:.1e}\\n"
+            f"OR(Q4)={OR4:.2f} [{OR4_lo:.2f},{OR4_hi:.2f}]",
+            transform=ax.transAxes,
+            ha="left",
+            va="top",
+            fontsize=8.5,
+            bbox=dict(
+                boxstyle="round,pad=0.20",
+                facecolor="white",
+                alpha=0.96,
+                edgecolor="black",
+                linewidth=0.7,
+            ),
+        )
+
+        ax.tick_params(axis="both", labelsize=9)
+
+    try:
+        fig_q.supylabel(
+            "Proportion of facilities",
+            x=0.045,
+            fontsize=10,
+            fontweight="bold",
+        )
+    except Exception:
+        fig_q.text(
+            0.045,
+            0.50,
+            "Proportion of facilities",
+            va="center",
+            ha="center",
+            rotation="vertical",
+            fontsize=10,
+            fontweight="bold",
+        )
+
+    fig_q.legend(
+        handles=legend_handles,
+        loc="lower center",
+        bbox_to_anchor=(0.50, 0.015),
+        ncol=2,
+        frameon=False,
+        fontsize=8.5,
+    )
+
+    out_quartiles = (
+        OUT_FIG.parent /
+        "Figure4b_basin_scale_water_stress_quartiles.png"
+    )
+
+    fig_q.savefig(
+        out_quartiles,
+        dpi=600,
+        bbox_inches=None,
+        pad_inches=0.03,
+        facecolor="white",
+    )
+
+    plt.close(fig_q)
+
+    print(f"Saved Figure 4b: {out_quartiles}")
+
+    stats_rows = []
+# DIRECT_SECTOR_COMPARISON_START
     # ============================================================
     # Direct comparison among AI, Power, and TRI facilities
     #
