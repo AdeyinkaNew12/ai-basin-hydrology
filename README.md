@@ -3,7 +3,7 @@
 This repository contains the reproducible Python workflows supporting the analysis of hydrographic, hydrologic, and water-stress characteristics associated with artificial intelligence (AI) data-center siting across the contiguous United States (CONUS).
 The archived software release is available through Zenodo:
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21972139.svg)](https://doi.org/10.5281/zenodo.21972139)
+[![DOI](https://zenodo.org/badge/1217127610.svg)](https://doi.org/10.5281/zenodo.21780447)
 
 The workflow integrates AI data-center locations with hydrographic datasets, hydrologic simulations, water-stress indicators, aquifer information, and industrial infrastructure datasets to evaluate relationships between digital infrastructure and freshwater systems.
 
