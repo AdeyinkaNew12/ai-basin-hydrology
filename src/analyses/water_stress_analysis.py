@@ -397,7 +397,6 @@ def run_mode(mode_name):
     if mode != "ALL_BASINS":
         raise ValueError("mode must be 'ALL_BASINS'")
 
-    OUT_FIG    = OUT_DIR / f"analysis4_fig_{mode}_tertiles_quartiles_3x2.png"
     OUT_JOINED = OUT_DIR / f"analysis4_facilities_with_stress_{mode}.csv"
     OUT_RANDOM = OUT_DIR / f"analysis4_random_with_stress_{mode}.csv"
     OUT_STATS  = OUT_DIR / f"analysis4_stats_chi2_OR_{mode}.csv"
@@ -613,7 +612,7 @@ def run_mode(mode_name):
     )
 
     out_tertiles = (
-        OUT_FIG.parent /
+        OUT_DIR /
         "Figure4a_basin_scale_water_stress_tertiles.png"
     )
 
@@ -745,7 +744,7 @@ def run_mode(mode_name):
     )
 
     out_quartiles = (
-        OUT_FIG.parent /
+        OUT_DIR /
         "Figure4b_basin_scale_water_stress_quartiles.png"
     )
 
@@ -966,7 +965,7 @@ def run_mode(mode_name):
     stats_df = pd.DataFrame(stats_rows)
     stats_df.to_csv(OUT_STATS, index=False)
 
-    return str(OUT_FIG), str(OUT_JOINED), str(OUT_RANDOM), str(OUT_STATS), stats_df
+    return str(out_tertiles), str(OUT_JOINED), str(OUT_RANDOM), str(OUT_STATS), stats_df
 
 # Primary inference is the direct comparison among AI, Power, and TRI.
 # The ALL_BASINS analysis is retained as a secondary national null model.
