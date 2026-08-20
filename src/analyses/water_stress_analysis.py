@@ -613,7 +613,7 @@ def run_mode(mode_name):
 
     out_tertiles = (
         OUT_DIR /
-        "Figure4a_basin_scale_water_stress_tertiles.png"
+        "Figure4_basin_scale_water_stress_tertiles.png"
     )
 
     fig_t.savefig(
@@ -626,7 +626,7 @@ def run_mode(mode_name):
 
     plt.close(fig_t)
 
-    print(f"Saved Figure 4a: {out_tertiles}")
+    print(f"Saved Figure 4: {out_tertiles}")
 
 
     # ============================================================
@@ -634,131 +634,7 @@ def run_mode(mode_name):
     # Vertical 3 x 1 layout: AI / Power / TRI
     # ============================================================
 
-    fig_q, axes_q = plt.subplots(
-        3, 1,
-        figsize=(7.2, 5.8),
-        dpi=600,
-        sharey=True,
-        constrained_layout=False,
-    )
 
-    fig_q.subplots_adjust(
-        left=0.105,
-        right=0.985,
-        top=0.94,
-        bottom=0.13,
-        hspace=0.28,
-    )
-
-    for i, sec in enumerate(SECTORS):
-
-        obs = fac[fac["sector"] == sec].copy()
-        rr = rand.copy()
-        N = len(obs)
-        ax = axes_q[i]
-
-        if N == 0:
-            ax.axis("off")
-            continue
-
-        obs4 = (
-            obs["stress_quartile"]
-            .value_counts()
-            .reindex(order4, fill_value=0)
-        )
-
-        rnd4 = (
-            rr["stress_quartile"]
-            .value_counts()
-            .reindex(order4, fill_value=0)
-        )
-
-        chi2_4, p_4, _, _ = chi2_contingency(
-            np.vstack([obs4.values, rnd4.values])
-        )
-
-        a4 = int(obs4["Q4"])
-        b4 = int(obs4["Q1"] + obs4["Q2"] + obs4["Q3"])
-        c4 = int(rnd4["Q4"])
-        d4 = int(rnd4["Q1"] + rnd4["Q2"] + rnd4["Q3"])
-
-        OR4, OR4_lo, OR4_hi = odds_ratio_2x2(
-            a4, b4, c4, d4
-        )
-
-        plot_grouped_percent_only(
-            ax,
-            order4,
-            obs4,
-            rnd4,
-            SECTOR_COLOR[sec],
-            f"{sec}: Stress quartiles",
-        )
-
-        ax.text(
-            0.018,
-            0.965,
-            f"$\\chi^2$={chi2_4:.1f}, p={p_4:.1e}\\n"
-            f"OR(Q4)={OR4:.2f} [{OR4_lo:.2f},{OR4_hi:.2f}]",
-            transform=ax.transAxes,
-            ha="left",
-            va="top",
-            fontsize=8.5,
-            bbox=dict(
-                boxstyle="round,pad=0.20",
-                facecolor="white",
-                alpha=0.96,
-                edgecolor="black",
-                linewidth=0.7,
-            ),
-        )
-
-        ax.tick_params(axis="both", labelsize=9)
-
-    try:
-        fig_q.supylabel(
-            "Proportion of facilities",
-            x=0.045,
-            fontsize=10,
-            fontweight="bold",
-        )
-    except Exception:
-        fig_q.text(
-            0.045,
-            0.50,
-            "Proportion of facilities",
-            va="center",
-            ha="center",
-            rotation="vertical",
-            fontsize=10,
-            fontweight="bold",
-        )
-
-    fig_q.legend(
-        handles=legend_handles,
-        loc="lower center",
-        bbox_to_anchor=(0.50, 0.015),
-        ncol=2,
-        frameon=False,
-        fontsize=8.5,
-    )
-
-    out_quartiles = (
-        OUT_DIR /
-        "Figure4b_basin_scale_water_stress_quartiles.png"
-    )
-
-    fig_q.savefig(
-        out_quartiles,
-        dpi=600,
-        bbox_inches=None,
-        pad_inches=0.03,
-        facecolor="white",
-    )
-
-    plt.close(fig_q)
-
-    print(f"Saved Figure 4b: {out_quartiles}")
 
     stats_rows = []
 # DIRECT_SECTOR_COMPARISON_START
