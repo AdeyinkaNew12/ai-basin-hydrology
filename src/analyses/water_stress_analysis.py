@@ -548,7 +548,7 @@ def run_mode(mode_name):
         ax.text(
             0.018,
             0.965,
-            f"$\\chi^2$={chi2_3:.1f}, p={p_3:.1e}\\n"
+            f"$\\chi^2$={chi2_3:.1f}, p={p_3:.1e}\n"
             f"OR(high)={ORh:.2f} [{ORh_lo:.2f},{ORh_hi:.2f}]",
             transform=ax.transAxes,
             ha="left",
