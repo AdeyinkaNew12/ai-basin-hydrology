@@ -278,8 +278,15 @@ def draw_panel(ax, gdf, color_map, panel_letter, title, total):
             sub.plot(ax=ax, color=color_map[lbl], edgecolor=EDGE_COLOR, linewidth=EDGE_LW)
 
     ax.text(0.03, 0.97, panel_letter, transform=ax.transAxes,
-            ha="left", va="top", fontsize=9, fontweight="normal")
-    ax.set_title(title, fontsize=11, fontweight="bold", pad=4)
+            ha="left", va="top", fontsize=14, fontweight="normal")
+    ax.text(
+        0.5, 0.94, title,
+        transform=ax.transAxes,
+        ha="center",
+        va="bottom",
+        fontsize=11,
+        fontweight="bold"
+    )
 
     place_labels_bbox(ax, gdf, N_LABELS, LABEL_MIN_PCT, CANDIDATE_POOL)
 
@@ -327,31 +334,153 @@ grn_map = {
 }
 
 plt.rcParams.update({"font.family": "DejaVu Sans"})
-fig, axes = plt.subplots(
-    3, 1,
-    figsize=(6.5, 10.0),
+
+# =========================================================
+# FINAL VERTICAL JOURNAL LAYOUT
+# Three maps with a dedicated legend row beneath each map.
+# This prevents legends from overlapping the next title.
+# =========================================================
+
+fig = plt.figure(
+    figsize=(7.5, 13.0),
     dpi=600
 )
 
-draw_panel(axes[0], m_ai,  blue_map, "a", "AI Data Centers",  tot_ai)
-draw_panel(axes[1], m_pwr, orng_map, "b", "Power Facilities", tot_pwr)
-draw_panel(axes[2], m_tri, grn_map,  "c", "TRI Facilities",   tot_tri)
+gs = fig.add_gridspec(
+    nrows=6,
+    ncols=1,
+    height_ratios=[
+        1.00, 0.20,
+        1.00, 0.20,
+        1.00, 0.20
+    ],
+    hspace=0.12
+)
 
-axes[0].legend(handles=legend_handles(blue_map), title="Share of national facilities (%)",
-               loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=3, frameon=False, fontsize=9, title_fontsize=9)
-axes[1].legend(handles=legend_handles(orng_map), title="Share of national facilities (%)",
-               loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=3, frameon=False, fontsize=9, title_fontsize=9)
-axes[2].legend(handles=legend_handles(grn_map),  title="Share of national facilities (%)",
-               loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=3, frameon=False, fontsize=9, title_fontsize=9)
+# ---------------------------------------------------------
+# Map axes
+# ---------------------------------------------------------
 
-plt.subplots_adjust(
+ax_ai = fig.add_subplot(gs[0, 0])
+ax_pwr = fig.add_subplot(gs[2, 0])
+ax_tri = fig.add_subplot(gs[4, 0])
+
+axes = [
+    ax_ai,
+    ax_pwr,
+    ax_tri
+]
+
+# ---------------------------------------------------------
+# Dedicated legend axes
+# ---------------------------------------------------------
+
+leg_ai = fig.add_subplot(gs[1, 0])
+leg_pwr = fig.add_subplot(gs[3, 0])
+leg_tri = fig.add_subplot(gs[5, 0])
+
+legend_axes = [
+    leg_ai,
+    leg_pwr,
+    leg_tri
+]
+
+for lax in legend_axes:
+    lax.set_axis_off()
+
+# ---------------------------------------------------------
+# Draw maps
+# ---------------------------------------------------------
+
+draw_panel(
+    ax_ai,
+    m_ai,
+    blue_map,
+    "a",
+    "AI Data Centers",
+    tot_ai
+)
+
+draw_panel(
+    ax_pwr,
+    m_pwr,
+    orng_map,
+    "b",
+    "Power Facilities",
+    tot_pwr
+)
+
+draw_panel(
+    ax_tri,
+    m_tri,
+    grn_map,
+    "c",
+    "TRI Facilities",
+    tot_tri
+)
+
+# ---------------------------------------------------------
+# Draw legends in their own rows
+# ---------------------------------------------------------
+
+leg_ai.legend(
+    handles=legend_handles(blue_map),
+    title="Share of national facilities (%)",
+    loc="center",
+    ncol=3,
+    frameon=False,
+    fontsize=9,
+    title_fontsize=9,
+    columnspacing=1.8,
+    handletextpad=0.8
+)
+
+leg_pwr.legend(
+    handles=legend_handles(orng_map),
+    title="Share of national facilities (%)",
+    loc="center",
+    ncol=3,
+    frameon=False,
+    fontsize=9,
+    title_fontsize=9,
+    columnspacing=1.8,
+    handletextpad=0.8
+)
+
+leg_tri.legend(
+    handles=legend_handles(grn_map),
+    title="Share of national facilities (%)",
+    loc="center",
+    ncol=3,
+    frameon=False,
+    fontsize=9,
+    title_fontsize=9,
+    columnspacing=1.8,
+    handletextpad=0.8
+)
+
+# ---------------------------------------------------------
+# Final figure margins
+# ---------------------------------------------------------
+
+fig.subplots_adjust(
     left=0.05,
     right=0.95,
-    top=0.96,
-    bottom=0.05,
-    hspace=0.65
+    top=0.985,
+    bottom=0.015
 )
-plt.savefig(OUT_FIG, dpi=600, bbox_inches="tight", pad_inches=0.10)
+
+# ---------------------------------------------------------
+# Save
+# ---------------------------------------------------------
+
+plt.savefig(
+    OUT_FIG,
+    dpi=600,
+    bbox_inches="tight",
+    pad_inches=0.05
+)
+
 plt.show()
 
 print("✅ Saved:", OUT_FIG)
