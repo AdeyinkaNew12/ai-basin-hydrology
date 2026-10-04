@@ -125,6 +125,38 @@ cramers_v = np.sqrt(
 
 
 # ------------------------------------------------------------
+# Save numerical results
+# ------------------------------------------------------------
+
+counts.to_csv(
+    OUT_DIR / "public_supply_source_counts.csv"
+)
+
+percentages.to_csv(
+    OUT_DIR / "public_supply_source_percentages.csv"
+)
+
+statistics = pd.DataFrame(
+    {
+        "Chi-square": [chi2],
+        "df": [dof],
+        "p-value": [p],
+        "Cramer's V": [cramers_v],
+        "N": [n],
+    }
+)
+
+statistics.to_csv(
+    OUT_DIR / "public_supply_source_statistics.csv",
+    index=False,
+)
+
+print("[SAVED]", OUT_DIR / "public_supply_source_counts.csv")
+print("[SAVED]", OUT_DIR / "public_supply_source_percentages.csv")
+print("[SAVED]", OUT_DIR / "public_supply_source_statistics.csv")
+
+
+# ------------------------------------------------------------
 # Verification output
 # ------------------------------------------------------------
 
