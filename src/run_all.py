@@ -14,11 +14,14 @@ ANALYSES = {
     "huc2_facility_distribution":
         "huc2_facility_distribution.py",
 
+    "huc2_regional_comparisons":
+        "huc2_regional_comparisons.py",
+
     "water_distance_ecdf":
         "water_distance_ecdf.py",
 
-    "water_supply_pathways":
-        "water_supply_pathways.py",
+    "public_supply_source_composition":
+        "public_supply_source_composition.py",
 
     "water_stress_analysis":
         "water_stress_analysis.py",

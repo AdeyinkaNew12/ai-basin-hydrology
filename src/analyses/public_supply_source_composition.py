@@ -18,7 +18,7 @@ from scipy.stats import chi2_contingency
 
 INPUT_FILE = Path(
     "/mnt/disk3/aoolaseinde/projects/ai-basin-hydrology/"
-    "latest_ERL_results/groundwater_dc/three_sector_pathways/"
+    "results/groundwater_dc/three_sector_pathways/"
     "three_sector_pathway_assignments.csv"
 )
 

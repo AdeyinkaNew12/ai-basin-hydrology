@@ -75,7 +75,7 @@ STRESS_FILE = (
 
 SUPPLY_FILE = (
     ROOT
-    / "latest_ERL_results/groundwater_dc"
+    / "results/groundwater_dc"
     / "three_sector_pathways"
     / "three_sector_pathway_assignments.csv"
 )
