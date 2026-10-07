@@ -1761,7 +1761,9 @@ gw = supply[
 
 
 # ------------------------------------------------------------
-# Preserve missing/equal values as Unclassified.
+# Classify dominant public supply source.
+# Surface water includes 50/50 cases.
+# Missing source fractions remain Unclassified.
 # ------------------------------------------------------------
 
 supply[
@@ -1769,25 +1771,18 @@ supply[
 ] = "Unclassified"
 
 
-valid_source = (
+supply.loc[
     sw.notna()
     &
-    gw.notna()
-)
-
-
-supply.loc[
-    valid_source
-    &
-    (sw > gw),
+    (sw >= 0.50),
     "public_supply_source"
 ] = "Surface water dominated"
 
 
 supply.loc[
-    valid_source
+    gw.notna()
     &
-    (gw > sw),
+    (gw > 0.50),
     "public_supply_source"
 ] = "Groundwater dominated"
 
