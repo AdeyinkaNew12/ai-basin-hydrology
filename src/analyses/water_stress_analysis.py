@@ -65,6 +65,11 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from scipy.stats import chi2_contingency
 
+
+def format_p_value(p):
+    return "p<0.001" if p < 0.001 else f"p={p:.3f}"
+
+
 # -------------------------
 # PATHS (EDIT IF NEEDED)
 # -------------------------
@@ -548,7 +553,7 @@ def run_mode(mode_name):
         ax.text(
             0.018,
             0.965,
-            f"$\\chi^2$={chi2_3:.1f}, p={p_3:.1e}\n"
+            f"$\\chi^2$={chi2_3:.1f}, {format_p_value(p_3)}\n"
             f"OR(high)={ORh:.2f} [{ORh_lo:.2f},{ORh_hi:.2f}]",
             transform=ax.transAxes,
             ha="left",
